@@ -51,7 +51,7 @@ function injectedFunction() {
     label.style.pointerEvents = "none";
     label.style.textAlign = "left";
     label.style.transform = transform;
-		label.style.whiteSpace = "nowrap";
+    label.style.whiteSpace = "nowrap";
     label.appendChild(text);
 
     return label;
@@ -59,6 +59,7 @@ function injectedFunction() {
 
   const addDebugDecoration = (
     query,
+    type,
     domElements,
     color,
     displayLabel,
@@ -83,12 +84,13 @@ function injectedFunction() {
 
       if (isVisible) {
         if (displayLabel) {
+          // + " " + target.className
           label = createLabel(
-            query + " " + target.className,
+            type == "className" ? kebabize(query) : query,
             "0px",
-            "-1px",
             "auto",
             "auto",
+            "0px",
             "translateY(-100%)"
           );
           target.appendChild(label);
@@ -143,7 +145,7 @@ function injectedFunction() {
           }
 
           label = createLabel(
-            "size!",
+            "",
             "50%",
             "50%",
             "auto",
@@ -166,60 +168,31 @@ function injectedFunction() {
           }
         }
       }
-
+      target.classList.add("RE-web-skeleton");
       target.style.outline = "1px " + color + " solid";
     }
   };
 
-  const removeDebugDecoration = (
-    query,
-    domElements,
-    displayLabel,
-    fullHorizontal,
-    displayOverlay
-  ) => {
-    let target, parentElement, isVisible;
-
+	const removeElementsByClass = (name, isParent) => {
+		let domElements, target, parentElement;
+    domElements = document.getElementsByClassName(name);
     for (let i = 0; i < domElements.length; i++) {
       target = domElements[i];
-
-      isVisible = isElementVisible(target);
-
-      if (isVisible) {
-        if (displayOverlay) {
-          try {
-            parentElement = target.parentElement;
-            parentElement.removeChild(
-              parentElement.getElementsByClassName("RE-overlay")[0]
-            );
-          } catch (e) {
-            //console.log(e);
-          }
-        }
-        if (displayLabel) {
-          try {
-            target.removeChild(target.getElementsByClassName("RE-label")[0]);
-          } catch (e) {
-            //console.log(e);
-          }
-        }
-        if (fullHorizontal) {
-          try {
-            target.removeChild(target.getElementsByClassName("RE-line-top")[0]);
-          } catch (e) {
-            //console.log(e);
-          }
-          try {
-            target.removeChild(
-              target.getElementsByClassName("RE-line-bottom")[0]
-            );
-          } catch (e) {
-            //console.log(e);
-          }
-        }
-      }
-      target.style.outline = "none";
+			if(isParent){
+				parentElement = target.parentElement;
+				parentElement.removeChild(target);
+			} else {
+				target.style.outline = "none";
+			}
     }
+	};
+
+  const removeDebugDecoration = () => {
+		removeElementsByClass("RE-web-skeleton", false);
+		removeElementsByClass("RE-overlay", true);
+		removeElementsByClass("RE-label", true);
+		removeElementsByClass("RE-line-top", true);
+		removeElementsByClass("RE-line-bottom", true);
   };
 
   const updateOverlaysLabel = () => {
@@ -229,34 +202,43 @@ function injectedFunction() {
       let size = target.getBoundingClientRect();
       let label = target.getElementsByClassName("RE-label")[0];
       if (label) {
-        label.textContent = Math.round(size.width) + " x " + Math.round(size.height);
+        label.textContent =
+          Math.round(size.width) + "x" + Math.round(size.height);
       }
     }
   };
 
-	const onScrollHandler = () => {
-		updateOverlaysLabel();
-	};
+  const onScrollHandler = () => {
+    updateOverlaysLabel();
+  };
 
-  const onResizeHandler = () => {
+	const updateViewportLabel = () => {
     const body = document.getElementsByTagName("body")[0];
-    const width = Number(document.body.clientWidth);
+		let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+		let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
     const label = body.getElementsByClassName("RE-viewport-label")[0];
     if (label) {
-      label.textContent = "XS";
-      if (width > 480) {
-        label.textContent = "S";
+
+			let content = "XS";
+      if (vw > 480) {
+        content = "S";
       }
-      if (width > 734) {
-        label.textContent = "M";
+      if (vw > 734) {
+        content = "M";
       }
-      if (width > 1068) {
-        label.textContent = "L";
+      if (vw > 1068) {
+        content = "L";
       }
-      if (width > 1440) {
-        label.textContent = "XL";
+      if (vw > 1440) {
+        content = "XL";
       }
+			content += "&nbsp;"+vw + "x" + vh;
+			label.innerHTML = content;
     }
+	}
+
+  const onResizeHandler = () => {
+		updateViewportLabel();
     updateOverlaysLabel();
   };
 
@@ -270,33 +252,31 @@ function injectedFunction() {
         body.removeChild(viewportLabel);
       }
       window.removeEventListener("resize", onResizeHandler);
-			window.removeEventListener("scroll", onScrollHandler);
+      window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("RE-WebSkeleton");
       state = "remove";
     } else {
       viewportLabel = document.createElement("div");
       viewportLabel.classList.add("RE-viewport-label");
-      viewportLabel.style.cursor = "pointer";
+      viewportLabel.style.userSelect = "none";
       viewportLabel.style.position = "fixed";
       viewportLabel.style.bottom = "15px";
       viewportLabel.style.right = "30px";
-      viewportLabel.style.width = "35px";
-      viewportLabel.style.height = "35px";
-      viewportLabel.style.lineHeight = "35px";
+      viewportLabel.style.lineHeight = "10px";
       viewportLabel.style.fontFamily =
         "-apple-system, Helvetica, Arial, sans-serif";
       viewportLabel.style.fontWeight = "bold";
-      viewportLabel.style.letterSpacing = "0rem";
-      viewportLabel.style.fontSize = "0.75rem";
+      viewportLabel.style.letterSpacing = "1px";
+      viewportLabel.style.fontSize = "10px";
       viewportLabel.style.color = "white";
       viewportLabel.style.background = color1;
-      viewportLabel.style.borderRadius = "100%";
-      viewportLabel.style.textAlign = "center";
+			viewportLabel.style.padding = "6px";
+      viewportLabel.style.textAlign = "right";
       viewportLabel.style.zIndex = "9999";
       body.appendChild(viewportLabel);
 
       window.addEventListener("resize", onResizeHandler);
-			window.addEventListener("scroll", onScrollHandler);
+      window.addEventListener("scroll", onScrollHandler);
       onResizeHandler();
 
       body.style.overflowX = "hidden";
@@ -321,24 +301,19 @@ function injectedFunction() {
       }
       if (domElements && domElements.length >= 1) {
         if (state == "remove") {
-          removeDebugDecoration(
-            element.query,
-            domElements,
-            element.displayLabel,
-            element.fullHorizontal,
-            element.displayOverlay
-          );
+          removeDebugDecoration();
         }
         if (state == "add") {
           addDebugDecoration(
             element.query,
+            element.type,
             domElements,
             element.color,
             element.displayLabel,
             element.fullHorizontal,
             element.displayOverlay
           );
-					updateOverlaysLabel();
+          updateOverlaysLabel();
         }
       }
     });
@@ -349,7 +324,7 @@ function injectedFunction() {
       query: "viewportContent",
       type: "className",
       color: color2,
-      displayLabel: false,
+      displayLabel: true,
       fullHorizontal: false,
       displayOverlay: false,
     },
@@ -374,7 +349,7 @@ function injectedFunction() {
       query: "h3",
       type: "query",
       color: color3,
-      displayLabel: false,
+      displayLabel: true,
       fullHorizontal: true,
       displayOverlay: false,
     },
@@ -382,7 +357,7 @@ function injectedFunction() {
       query: "h4",
       type: "query",
       color: color3,
-      displayLabel: false,
+      displayLabel: true,
       fullHorizontal: true,
       displayOverlay: false,
     },
@@ -390,16 +365,23 @@ function injectedFunction() {
       query: "h5",
       type: "query",
       color: color3,
-      displayLabel: false,
+      displayLabel: true,
       fullHorizontal: true,
       displayOverlay: false,
     },
-
+    {
+      query: "h6",
+      type: "query",
+      color: color3,
+      displayLabel: true,
+      fullHorizontal: true,
+      displayOverlay: false,
+    },
     {
       query: "p",
       type: "query",
       color: color3,
-      displayLabel: false,
+      displayLabel: true,
       fullHorizontal: true,
       displayOverlay: false,
     },
