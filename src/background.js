@@ -21,12 +21,40 @@ function injectedFunction() {
       return false;
     }
 
-		style = window.getComputedStyle(target);
-		if (style.getPropertyValue("display") == "none") {
-			return false;
-		}
+    style = window.getComputedStyle(target);
+    if (style.getPropertyValue("display") == "none") {
+      return false;
+    }
 
     return true;
+  };
+
+  const createLabel = (content, top, left, bottom, right, transform) => {
+    let label = document.createElement("div");
+    label.classList.add("RE-label");
+
+    text = document.createTextNode(content);
+    label.style.position = "absolute";
+    label.style.top = top;
+    label.style.left = left;
+    label.style.right = right;
+    label.style.bottom = bottom;
+    label.style.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
+    label.style.fontWeight = "bold";
+    label.style.letterSpacing = "1px";
+    label.style.fontSize = "9px";
+    label.style.lineHeight = "9px";
+    label.style.textTransform = "none";
+    label.style.color = "white";
+    label.style.background = color1;
+    label.style.padding = "6px";
+    label.style.pointerEvents = "none";
+    label.style.textAlign = "left";
+    label.style.transform = transform;
+		label.style.whiteSpace = "nowrap";
+    label.appendChild(text);
+
+    return label;
   };
 
   const addDebugDecoration = (
@@ -41,9 +69,7 @@ function injectedFunction() {
       parentElement,
       style,
       position,
-      display,
       label,
-      text,
       line,
       overlay,
       isVisible,
@@ -57,28 +83,14 @@ function injectedFunction() {
 
       if (isVisible) {
         if (displayLabel) {
-          label = document.createElement("div");
-          label.classList.add("RE-label");
-          if (target.className) {
-            text = document.createTextNode(query + ": "+target.className);
-            label.style.position = "absolute";
-            label.style.top = "0px";
-            label.style.left = "-1px";
-            label.style.fontFamily =
-              "-apple-system, Helvetica, Arial, sans-serif";
-            label.style.fontWeight = "bold";
-            label.style.letterSpacing = "1px";
-            label.style.fontSize = "9px";
-            label.style.lineHeight = "9px";
-            label.style.textTransform = "none";
-            label.style.color = "white";
-            label.style.background = color1;
-            label.style.padding = "6px";
-            label.style.pointerEvents = "none";
-            label.style.textAlign = "left";
-            label.style.transform = "translateY(-100%)";
-            label.appendChild(text);
-          }
+          label = createLabel(
+            query + " " + target.className,
+            "0px",
+            "-1px",
+            "auto",
+            "auto",
+            "translateY(-100%)"
+          );
           target.appendChild(label);
           updatePosition = true;
         }
@@ -129,6 +141,16 @@ function injectedFunction() {
           ) {
             parentElement.style.position = "relative";
           }
+
+          label = createLabel(
+            "size!",
+            "50%",
+            "50%",
+            "auto",
+            "auto",
+            "translate(-50%, -50%)"
+          );
+          overlay.appendChild(label);
           parentElement.appendChild(overlay);
         }
 
@@ -161,44 +183,60 @@ function injectedFunction() {
     for (let i = 0; i < domElements.length; i++) {
       target = domElements[i];
 
-			isVisible = isElementVisible(target);
+      isVisible = isElementVisible(target);
 
-			if(isVisible){
-      if (displayOverlay) {
-        try {
-          parentElement = target.parentElement;
-          parentElement.removeChild(
-            parentElement.getElementsByClassName("RE-overlay")[0]
-          );
-        } catch (e) {
-          //console.log(e);
+      if (isVisible) {
+        if (displayOverlay) {
+          try {
+            parentElement = target.parentElement;
+            parentElement.removeChild(
+              parentElement.getElementsByClassName("RE-overlay")[0]
+            );
+          } catch (e) {
+            //console.log(e);
+          }
+        }
+        if (displayLabel) {
+          try {
+            target.removeChild(target.getElementsByClassName("RE-label")[0]);
+          } catch (e) {
+            //console.log(e);
+          }
+        }
+        if (fullHorizontal) {
+          try {
+            target.removeChild(target.getElementsByClassName("RE-line-top")[0]);
+          } catch (e) {
+            //console.log(e);
+          }
+          try {
+            target.removeChild(
+              target.getElementsByClassName("RE-line-bottom")[0]
+            );
+          } catch (e) {
+            //console.log(e);
+          }
         }
       }
-      if (displayLabel) {
-        try {
-          target.removeChild(target.getElementsByClassName("RE-label")[0]);
-        } catch (e) {
-          //console.log(e);
-        }
-      }
-      if (fullHorizontal) {
-        try {
-          target.removeChild(target.getElementsByClassName("RE-line-top")[0]);
-        } catch (e) {
-          //console.log(e);
-        }
-        try {
-          target.removeChild(
-            target.getElementsByClassName("RE-line-bottom")[0]
-          );
-        } catch (e) {
-          //console.log(e);
-        }
-      }
-		}
       target.style.outline = "none";
     }
   };
+
+  const updateOverlaysLabel = () => {
+    const domElements = document.getElementsByClassName("RE-overlay");
+    for (let i = 0; i < domElements.length; i++) {
+      let target = domElements[i];
+      let size = target.getBoundingClientRect();
+      let label = target.getElementsByClassName("RE-label")[0];
+      if (label) {
+        label.textContent = Math.round(size.width) + " x " + Math.round(size.height);
+      }
+    }
+  };
+
+	const onScrollHandler = () => {
+		updateOverlaysLabel();
+	};
 
   const onResizeHandler = () => {
     const body = document.getElementsByTagName("body")[0];
@@ -219,6 +257,7 @@ function injectedFunction() {
         label.textContent = "XL";
       }
     }
+    updateOverlaysLabel();
   };
 
   const toggleDecorations = (elements) => {
@@ -231,6 +270,7 @@ function injectedFunction() {
         body.removeChild(viewportLabel);
       }
       window.removeEventListener("resize", onResizeHandler);
+			window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("RE-WebSkeleton");
       state = "remove";
     } else {
@@ -256,6 +296,7 @@ function injectedFunction() {
       body.appendChild(viewportLabel);
 
       window.addEventListener("resize", onResizeHandler);
+			window.addEventListener("scroll", onScrollHandler);
       onResizeHandler();
 
       body.style.overflowX = "hidden";
@@ -297,6 +338,7 @@ function injectedFunction() {
             element.fullHorizontal,
             element.displayOverlay
           );
+					updateOverlaysLabel();
         }
       }
     });
