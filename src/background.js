@@ -11,10 +11,11 @@ function injectedFunction() {
   };
 
   const color1 = "rgb(222,0,255)";
-  const color2 = "rgba(222,0,255,0.5)";
+  const color2 = "rgba(222,0,255,0.45)";
   const color3 = "rgba(222,0,255,0.35)";
   const color4 = "rgba(222,0,255,0.25)";
   const color5 = "rgba(222,0,255,0.15)";
+  const colorTest = "rgba(0, 0, 255, 1)";
 
   const isElementVisible = (target) => {
     if (target.classList.contains("visuallyhidden")) {
@@ -63,11 +64,12 @@ function injectedFunction() {
     domElements,
     color,
     displayLabel,
-    fullHorizontal,
-    displayOverlay
+    displayLines,
+    displayOverlay,
+    overlayTarget
   ) => {
     let target,
-      parentElement,
+      overlayTargetElement,
       style,
       position,
       label,
@@ -83,7 +85,7 @@ function injectedFunction() {
       isVisible = isElementVisible(target);
 
       if (isVisible) {
-        if (displayLabel) {
+        if (displayLabel && !displayOverlay) {
           // + " " + target.className
           label = createLabel(
             type == "className" ? kebabize(query) : query,
@@ -97,63 +99,92 @@ function injectedFunction() {
           updatePosition = true;
         }
 
-        if (fullHorizontal) {
+        if (displayLines) {
           line = document.createElement("div");
           line.classList.add("RE-line-top");
           line.style.position = "absolute";
-          line.style.top = "100%";
-          line.style.left = "50%";
-          line.style.width = "400vw";
+          line.style.top = "-1px";
+          line.style.left = "calc(100% + 1px)";
+          line.style.width = "100vw";
           line.style.height = "1px";
           line.style.background = color5;
-          line.style.transform = "translateX(-50%)";
+          line.style.pointerEvents = "none";
+          target.appendChild(line);
+
+          line = document.createElement("div");
+          line.classList.add("RE-line-top");
+          line.style.position = "absolute";
+          line.style.top = "-1px";
+          line.style.left = "calc(-100vw - 1px)";
+          line.style.width = "100vw";
+          line.style.height = "1px";
+          line.style.background = color5;
           line.style.pointerEvents = "none";
           target.appendChild(line);
 
           line = document.createElement("div");
           line.classList.add("RE-line-bottom");
           line.style.position = "absolute";
-          line.style.top = "-1px";
-          line.style.left = "50%";
-          line.style.width = "400vw";
+          line.style.top = "100%";
+          line.style.left = "calc(100% + 1px)";
+          line.style.width = "100vw";
           line.style.height = "1px";
           line.style.background = color5;
-          line.style.transform = "translateX(-50%)";
           line.style.pointerEvents = "none";
           target.appendChild(line);
+
+          line = document.createElement("div");
+          line.classList.add("RE-line-bottom");
+          line.style.position = "absolute";
+          line.style.top = "100%";
+          line.style.left = "calc(-100vw - 1px)";
+          line.style.width = "100vw";
+          line.style.height = "1px";
+          line.style.background = color5;
+          line.style.pointerEvents = "none";
+          target.appendChild(line);
+
           updatePosition = true;
         }
 
         if (displayOverlay) {
           overlay = document.createElement("div");
           overlay.classList.add("RE-overlay");
+          overlay.classList.add("RE-overlay-" + overlayTarget);
           overlay.style.position = "absolute";
           overlay.style.top = "0";
           overlay.style.left = "0";
           overlay.style.width = "100%";
           overlay.style.height = "100%";
           overlay.style.backgroundColor = color5;
-          parentElement = target.parentElement;
-          style = window.getComputedStyle(parentElement);
+					overlay.style.pointerEvents = "none";
+          if (overlayTarget == "parent") {
+            overlayTargetElement = target.parentElement;
+          } else {
+            overlayTargetElement = target;
+          }
+          style = window.getComputedStyle(overlayTargetElement);
           position = style.getPropertyValue("position");
           if (
             position != "sticky" &&
             position != "absolute" &&
             position != "fixed"
           ) {
-            parentElement.style.position = "relative";
+            overlayTargetElement.style.position = "relative";
           }
 
-          label = createLabel(
-            "",
-            "50%",
-            "50%",
-            "auto",
-            "auto",
-            "translate(-50%, -50%)"
-          );
-          overlay.appendChild(label);
-          parentElement.appendChild(overlay);
+          if (displayLabel) {
+            label = createLabel(
+              "",
+              "50%",
+              "50%",
+              "auto",
+              "auto",
+              "translate(-50%, -50%)"
+            );
+            overlay.appendChild(label);
+          }
+          overlayTargetElement.appendChild(overlay);
         }
 
         if (updatePosition) {
@@ -173,26 +204,26 @@ function injectedFunction() {
     }
   };
 
-	const removeElementsByClass = (name, isParent) => {
-		let domElements, target, parentElement;
+  const removeElementsByClass = (name, isParent) => {
+    let domElements, target, parentElement;
     domElements = document.getElementsByClassName(name);
     for (let i = 0; i < domElements.length; i++) {
       target = domElements[i];
-			if(isParent){
-				parentElement = target.parentElement;
-				parentElement.removeChild(target);
-			} else {
-				target.style.outline = "none";
-			}
+      if (isParent) {
+        parentElement = target.parentElement;
+        parentElement.removeChild(target);
+      } else {
+        target.style.outline = "none";
+      }
     }
-	};
+  };
 
   const removeDebugDecoration = () => {
-		removeElementsByClass("RE-web-skeleton", false);
-		removeElementsByClass("RE-overlay", true);
-		removeElementsByClass("RE-label", true);
-		removeElementsByClass("RE-line-top", true);
-		removeElementsByClass("RE-line-bottom", true);
+    removeElementsByClass("RE-web-skeleton", false);
+    removeElementsByClass("RE-overlay", true);
+    removeElementsByClass("RE-label", true);
+    removeElementsByClass("RE-line-top", true);
+    removeElementsByClass("RE-line-bottom", true);
   };
 
   const updateOverlaysLabel = () => {
@@ -212,14 +243,19 @@ function injectedFunction() {
     updateOverlaysLabel();
   };
 
-	const updateViewportLabel = () => {
+  const updateViewportLabel = () => {
     const body = document.getElementsByTagName("body")[0];
-		let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
-		let vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+    let vw = Math.max(
+      document.documentElement.clientWidth || 0,
+      window.innerWidth || 0
+    );
+    let vh = Math.max(
+      document.documentElement.clientHeight || 0,
+      window.innerHeight || 0
+    );
     const label = body.getElementsByClassName("RE-viewport-label")[0];
     if (label) {
-
-			let content = "XS";
+      let content = "XS";
       if (vw > 480) {
         content = "S";
       }
@@ -232,13 +268,13 @@ function injectedFunction() {
       if (vw > 1440) {
         content = "XL";
       }
-			content += "&nbsp;"+vw + "x" + vh;
-			label.innerHTML = content;
+      content += "&nbsp;" + vw + "x" + vh;
+      label.innerHTML = content;
     }
-	}
+  };
 
   const onResizeHandler = () => {
-		updateViewportLabel();
+    updateViewportLabel();
     updateOverlaysLabel();
   };
 
@@ -270,7 +306,7 @@ function injectedFunction() {
       viewportLabel.style.fontSize = "10px";
       viewportLabel.style.color = "white";
       viewportLabel.style.background = color1;
-			viewportLabel.style.padding = "6px";
+      viewportLabel.style.padding = "6px";
       viewportLabel.style.textAlign = "right";
       viewportLabel.style.zIndex = "9999";
       body.appendChild(viewportLabel);
@@ -305,13 +341,14 @@ function injectedFunction() {
         }
         if (state == "add") {
           addDebugDecoration(
-            element.query,
-            element.type,
+            element.query ? element.query : "",
+            element.type ? element.type : "",
             domElements,
-            element.color,
-            element.displayLabel,
-            element.fullHorizontal,
-            element.displayOverlay
+            element.color ? element.color : colorTest,
+            element.displayLabel ? element.displayLabel : false,
+            element.displayLines ? element.displayLines : false,
+            element.displayOverlay ? element.displayOverlay : false,
+            element.overlayTarget ? element.overlayTarget : ""
           );
           updateOverlaysLabel();
         }
@@ -325,7 +362,7 @@ function injectedFunction() {
       type: "className",
       color: color2,
       displayLabel: true,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
 
@@ -334,7 +371,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: true,
       displayOverlay: false,
     },
     {
@@ -342,7 +379,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: true,
       displayOverlay: false,
     },
     {
@@ -350,7 +387,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: true,
       displayOverlay: false,
     },
     {
@@ -358,7 +395,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -366,7 +403,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -374,7 +411,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -382,7 +419,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      fullHorizontal: true,
+      displayLines: true,
       displayOverlay: false,
     },
     {
@@ -390,7 +427,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -398,39 +435,50 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
       query: "img",
       type: "query",
       color: color2,
-      displayLabel: false,
-      fullHorizontal: false,
+      displayLabel: true,
+      displayLines: false,
       displayOverlay: true,
+      overlayTarget: "parent",
+    },
+    {
+      query: "figure",
+      type: "query",
+      color: color2,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: true,
+      overlayTarget: "self",
     },
     {
       query: "canvas",
       type: "query",
       color: color2,
-      displayLabel: false,
-      fullHorizontal: false,
+      displayLabel: true,
+      displayLines: false,
       displayOverlay: true,
+			overlayTarget: "parent",
     },
     {
       query: "wrapper",
       type: "contains",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "item",
       type: "contains",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -438,7 +486,7 @@ function injectedFunction() {
       type: "contains",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -446,23 +494,23 @@ function injectedFunction() {
       type: "className",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
       query: "row",
-      type: "className",
+      type: "contains",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: true,
       displayOverlay: false,
     },
     {
       query: "column",
-      type: "className",
+      type: "contains",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -470,7 +518,7 @@ function injectedFunction() {
       type: "className",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -478,7 +526,7 @@ function injectedFunction() {
       type: "className",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -486,7 +534,7 @@ function injectedFunction() {
       type: "className",
       color: color2,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
     {
@@ -494,15 +542,15 @@ function injectedFunction() {
       type: "query",
       color: color4,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "svg",
       type: "query",
       color: color3,
       displayLabel: false,
-      fullHorizontal: false,
+      displayLines: false,
       displayOverlay: false,
     },
   ];
