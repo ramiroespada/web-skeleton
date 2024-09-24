@@ -44,7 +44,7 @@ function injectedFunction() {
       return false;
     }
 
-		if (style.getPropertyValue("visibility") == "hidden") {
+    if (style.getPropertyValue("visibility") == "hidden") {
       return false;
     }
 
@@ -61,11 +61,11 @@ function injectedFunction() {
     isParent
   ) => {
     let label = document.createElement("div");
-		if (isParent) {
-    	label.classList.add("web-skeleton-label-parent");
-		} else {
-			label.classList.add("web-skeleton-label");
-		}
+    if (isParent) {
+      label.classList.add("web-skeleton-label-parent");
+    } else {
+      label.classList.add("web-skeleton-label");
+    }
     text = document.createTextNode(content);
     label.setAttribute("web-skeleton-label", content);
     label.style.position = "absolute";
@@ -77,7 +77,7 @@ function injectedFunction() {
     label.style.height = "auto";
     label.style.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
     label.style.fontWeight = "bold";
-    label.style.letterSpacing = "1px";
+    label.style.letterSpacing = "2px";
     label.style.fontSize = "9px";
     label.style.lineHeight = "9px";
     label.style.textTransform = "none";
@@ -88,6 +88,7 @@ function injectedFunction() {
     label.style.textAlign = "left";
     label.style.transform = transform;
     label.style.whiteSpace = "nowrap";
+    label.style.zIndex = 999;
     label.appendChild(text);
 
     return label;
@@ -115,7 +116,6 @@ function injectedFunction() {
     let target,
       overlayTargetElement,
       style,
-      position,
       label,
       line,
       overlay,
@@ -164,6 +164,7 @@ function injectedFunction() {
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
+          line.style.zIndex = 999;
           target.appendChild(line);
 
           line = document.createElement("div");
@@ -175,6 +176,7 @@ function injectedFunction() {
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
+          line.style.zIndex = 999;
           target.appendChild(line);
 
           line = document.createElement("div");
@@ -186,6 +188,7 @@ function injectedFunction() {
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
+          line.style.zIndex = 999;
           target.appendChild(line);
 
           line = document.createElement("div");
@@ -197,6 +200,7 @@ function injectedFunction() {
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
+          line.style.zIndex = 999;
           target.appendChild(line);
           updatePosition = true;
         }
@@ -212,6 +216,7 @@ function injectedFunction() {
           overlay.style.height = "100%";
           overlay.style.backgroundColor = overlayColor;
           overlay.style.pointerEvents = "none";
+          overlay.style.zIndex = 999;
 
           if (displayLabel) {
             label = createLabel(
@@ -234,15 +239,25 @@ function injectedFunction() {
 
         target.classList.add("web-skeleton");
         target.style.outline = "1px " + color + " solid";
+
         if (query == "svg") {
           target.classList.add("web-skeleton-svg");
+          style = window.getComputedStyle(target);
+          target.setAttribute("web-skeleton-svg-bg", style.backgroundColor);
+          target.style.backgroundColor = overlayColor;
+        }
+
+        if (query == "figure") {
+          target.classList.add("web-skeleton-figure");
+          style = window.getComputedStyle(target);
+          target.setAttribute("web-skeleton-figure-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
         }
       }
     }
   };
 
-  const removeElementsByClass = (name, isParent, isSvg) => {
+  const removeElementsByClass = (name, isParent, query) => {
     let domElements, target, parentElement;
     domElements = document.getElementsByClassName(name);
     for (let i = 0; i < domElements.length; i++) {
@@ -253,43 +268,52 @@ function injectedFunction() {
       } else {
         target.style.outline = "none";
       }
-      if (isSvg) {
-        target.style.backgroundColor = "transparent";
+      if (query == "svg") {
+        target.style.backgroundColor = target.getAttribute(
+          "web-skeleton-svg-bg"
+        );
+      }
+      if (query == "figure") {
+        target.style.backgroundColor = target.getAttribute(
+          "web-skeleton-figure-bg"
+        );
       }
     }
   };
 
   const removeDebugDecoration = () => {
+    removeElementsByClass("web-skeleton-svg", false, "svg");
+    removeElementsByClass("web-skeleton-figure", false, "figure");
     removeElementsByClass("web-skeleton", false, false);
     removeElementsByClass("web-skeleton-overlay", true, false);
     removeElementsByClass("web-skeleton-label", true, false);
     removeElementsByClass("web-skeleton-line-top", true, false);
     removeElementsByClass("web-skeleton-line-bottom", true, false);
-    removeElementsByClass("web-skeleton-svg", false, true);
   };
 
   const updateOverlaysLabel = () => {
-    const domElements = document.getElementsByClassName("web-skeleton-overlay-parent");
+    const domElements = document.getElementsByClassName(
+      "web-skeleton-overlay-parent"
+    );
     for (let i = 0; i < domElements.length; i++) {
       let target = domElements[i];
       let label = target.getElementsByClassName("web-skeleton-label-parent")[0];
-			let child = target.parentElement.querySelectorAll("img")[0];
-			if(!child){
-				child = target.parentElement.querySelectorAll("svg")[0];
-			}
+      let child = target.parentElement.querySelectorAll("img")[0];
+      if (!child) {
+        child = target.parentElement.querySelectorAll("svg")[0];
+      }
       let size = target.getBoundingClientRect();
-			if(child) {
-				size = child.getBoundingClientRect();
-				/*
-				target.style.width = size.width;
-				target.style.height = size.height;
-				target.style.top = size.top;
-				target.style.left = size.left;
-				*/
-			}
+      if (child) {
+        size = child.getBoundingClientRect();
+      }
       if (label) {
-        label.textContent =
-          Math.round(size.width) + "x" + Math.round(size.height);
+        if (size.width <= 1 || size.height <= 1) {
+          label.style.visibility = "hidden";
+        } else {
+          label.style.visibility = "visible";
+          label.textContent =
+            Math.round(size.width) + " X " + Math.round(size.height);
+        }
       }
     }
   };
@@ -323,7 +347,7 @@ function injectedFunction() {
       if (vw > 1440) {
         content = "XL";
       }
-      content += "&nbsp;" + vw + "x" + vh;
+      content += "&nbsp;" + vw + " X " + vh;
       label.innerHTML = content;
     }
   };
@@ -353,13 +377,13 @@ function injectedFunction() {
       viewportLabel.classList.add("web-skeleton-viewport-label");
       viewportLabel.style.userSelect = "none";
       viewportLabel.style.position = "fixed";
-      viewportLabel.style.bottom = "15px";
+      viewportLabel.style.bottom = "30px";
       viewportLabel.style.right = "30px";
       viewportLabel.style.lineHeight = "10px";
       viewportLabel.style.fontFamily =
         "-apple-system, Helvetica, Arial, sans-serif";
       viewportLabel.style.fontWeight = "bold";
-      viewportLabel.style.letterSpacing = "1px";
+      viewportLabel.style.letterSpacing = "2px";
       viewportLabel.style.fontSize = "10px";
       viewportLabel.style.color = "white";
       viewportLabel.style.background = color1;
@@ -484,7 +508,7 @@ function injectedFunction() {
     {
       query: "a",
       type: "query",
-      color: color3,
+      color: color4,
     },
     {
       query: "button",
@@ -504,7 +528,6 @@ function injectedFunction() {
       query: "video",
       type: "query",
       color: color3,
-      overlayColor: color6,
     },
     {
       query: "figure",
@@ -517,8 +540,14 @@ function injectedFunction() {
       type: "query",
       color: color2,
       overlayColor: color6,
-			displayOverlay: true,
-			overlayTarget: "parent",
+      displayOverlay: true,
+      overlayTarget: "parent",
+    },
+		{
+      query: "svg",
+      type: "query",
+      color: color4,
+      overlayColor: color6,
     },
     {
       query: "wrapper",
@@ -532,6 +561,11 @@ function injectedFunction() {
     },
     {
       query: "container",
+      type: "contains",
+      color: color4,
+    },
+		{
+      query: "content",
       type: "contains",
       color: color4,
     },
@@ -605,13 +639,21 @@ function injectedFunction() {
       type: "query",
       color: color3,
     },
-    {
-      query: "svg",
+		{
+      query: "tr",
       type: "query",
-      color: color4,
-      overlayColor: color6,
+      color: color6,
     },
-
+		{
+      query: "td",
+      type: "query",
+      color: color7,
+    },
+		{
+      query: "strong",
+      type: "query",
+      color: color7,
+    },
   ];
 
   toggleDecorations(elements);
