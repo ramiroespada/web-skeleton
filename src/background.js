@@ -10,11 +10,13 @@ function injectedFunction() {
       .join("");
   };
 
-  const color1 = "rgb(222,0,255)";
-  const color2 = "rgba(222,0,255,0.45)";
-  const color3 = "rgba(222,0,255,0.35)";
-  const color4 = "rgba(222,0,255,0.25)";
-  const color5 = "rgba(222,0,255,0.15)";
+	const color1 = "rgb(222,0,255)";
+  const color2 = "rgba(222,0,255,0.6)";
+  const color3 = "rgba(222,0,255,0.5)";
+  const color4 = "rgba(222,0,255,0.4)";
+  const color5 = "rgba(222,0,255,0.3)";
+	const color6 = "rgba(222,0,255,0.2)";
+	const color7 = "rgba(222,0,255,0.1)";
   const colorTest = "rgba(0, 0, 255, 1)";
 
   const isElementVisible = (target) => {
@@ -66,6 +68,7 @@ function injectedFunction() {
     type,
     domElements,
     color,
+		overlayColor,
     displayLabel,
     displayLines,
     displayOverlay,
@@ -95,7 +98,7 @@ function injectedFunction() {
             "0px",
             "auto",
             "auto",
-            "0px",
+            "-1px",
             "translateY(-100%)"
           );
           target.appendChild(label);
@@ -110,7 +113,7 @@ function injectedFunction() {
           line.style.left = "calc(100% + 1px)";
           line.style.width = "100vw";
           line.style.height = "1px";
-          line.style.background = color5;
+          line.style.background = color6;
           line.style.pointerEvents = "none";
           target.appendChild(line);
 
@@ -121,7 +124,7 @@ function injectedFunction() {
           line.style.left = "calc(-100vw - 1px)";
           line.style.width = "100vw";
           line.style.height = "1px";
-          line.style.background = color5;
+          line.style.background = color6;
           line.style.pointerEvents = "none";
           target.appendChild(line);
 
@@ -132,7 +135,7 @@ function injectedFunction() {
           line.style.left = "calc(100% + 1px)";
           line.style.width = "100vw";
           line.style.height = "1px";
-          line.style.background = color5;
+          line.style.background = color6;
           line.style.pointerEvents = "none";
           target.appendChild(line);
 
@@ -143,7 +146,7 @@ function injectedFunction() {
           line.style.left = "calc(-100vw - 1px)";
           line.style.width = "100vw";
           line.style.height = "1px";
-          line.style.background = color5;
+          line.style.background = color6;
           line.style.pointerEvents = "none";
           target.appendChild(line);
 
@@ -159,7 +162,7 @@ function injectedFunction() {
           overlay.style.left = "0";
           overlay.style.width = "100%";
           overlay.style.height = "100%";
-          overlay.style.backgroundColor = color5;
+          overlay.style.backgroundColor = overlayColor;
 					overlay.style.pointerEvents = "none";
           if (overlayTarget == "parent") {
             overlayTargetElement = target.parentElement;
@@ -348,6 +351,7 @@ function injectedFunction() {
             element.type ? element.type : "",
             domElements,
             element.color ? element.color : colorTest,
+						element.overlayColor ? element.overlayColor : color5,
             element.displayLabel ? element.displayLabel : false,
             element.displayLines ? element.displayLines : false,
             element.displayOverlay ? element.displayOverlay : false,
@@ -397,7 +401,7 @@ function injectedFunction() {
       type: "query",
       color: color3,
       displayLabel: true,
-      displayLines: false,
+      displayLines: true,
       displayOverlay: false,
     },
     {
@@ -408,8 +412,24 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-    {
+		{
       query: "h6",
+      type: "query",
+      color: color3,
+      displayLabel: true,
+      displayLines: false,
+      displayOverlay: false,
+    },
+		{
+      query: "h7",
+      type: "query",
+      color: color3,
+      displayLabel: true,
+      displayLines: false,
+      displayOverlay: false,
+    },
+		{
+      query: "h8",
       type: "query",
       color: color3,
       displayLabel: true,
@@ -443,7 +463,8 @@ function injectedFunction() {
     {
       query: "img",
       type: "query",
-      color: color2,
+      color: color3,
+			overlayColor: color5,
       displayLabel: true,
       displayLines: false,
       displayOverlay: true,
@@ -452,7 +473,8 @@ function injectedFunction() {
 		{
       query: "video",
       type: "query",
-      color: color2,
+      color: color3,
+			overlayColor: color6,
       displayLabel: false,
       displayLines: false,
       displayOverlay: true,
@@ -461,16 +483,16 @@ function injectedFunction() {
     {
       query: "figure",
       type: "query",
-      color: color2,
+      color: color3,
       displayLabel: false,
       displayLines: false,
       displayOverlay: false,
-      overlayTarget: "self",
     },
     {
       query: "canvas",
       type: "query",
       color: color2,
+			overlayColor: color5,
       displayLabel: true,
       displayLines: false,
       displayOverlay: true,
@@ -513,11 +535,35 @@ function injectedFunction() {
       type: "contains",
       color: color4,
       displayLabel: false,
-      displayLines: true,
+      displayLines: false,
       displayOverlay: false,
     },
     {
       query: "column",
+      type: "contains",
+      color: color4,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: false,
+    },
+		{
+      query: "quote",
+      type: "contains",
+      color: color4,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: false,
+    },
+		{
+      query: "text",
+      type: "contains",
+      color: color4,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: false,
+    },
+		{
+      query: "txt",
       type: "contains",
       color: color4,
       displayLabel: false,
@@ -535,7 +581,7 @@ function injectedFunction() {
     {
       query: "card",
       type: "className",
-      color: color4,
+      color: color3,
       displayLabel: false,
       displayLines: false,
       displayOverlay: false,
@@ -556,14 +602,24 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-    {
-      query: "svg",
+		{
+      query: "form",
       type: "query",
       color: color3,
       displayLabel: false,
       displayLines: false,
       displayOverlay: false,
     },
+    {
+      query: "svg",
+      type: "query",
+      color: color4,
+			overlayColor: color7,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: true,
+			overlayTarget: "parent",
+		},
   ];
 
   toggleDecorations(elements);
