@@ -10,18 +10,33 @@ function injectedFunction() {
       .join("");
   };
 
-	const color1 = "rgb(222,0,255)";
+  const color1 = "rgb(222,0,255)";
   const color2 = "rgba(222,0,255,0.6)";
   const color3 = "rgba(222,0,255,0.5)";
   const color4 = "rgba(222,0,255,0.4)";
   const color5 = "rgba(222,0,255,0.3)";
-	const color6 = "rgba(222,0,255,0.2)";
-	const color7 = "rgba(222,0,255,0.1)";
+  const color6 = "rgba(222,0,255,0.2)";
+  const color7 = "rgba(222,0,255,0.1)";
   const colorTest = "rgba(0, 0, 255, 1)";
 
-  const isElementVisible = (target) => {
+  const isElementVisible = (target, query) => {
     if (target.classList.contains("visuallyhidden")) {
       return false;
+    }
+
+    if (
+      query == "p" ||
+      query == "h1" ||
+      query == "h2" ||
+      query == "h3" ||
+      query == "h4" ||
+      query == "h5" ||
+      query == "h6" ||
+      query == "h7"
+    ) {
+      if (String(target.textContent).length <= 1) {
+        return false;
+      }
     }
 
     style = window.getComputedStyle(target);
@@ -37,14 +52,14 @@ function injectedFunction() {
     label.classList.add("web-skeleton-label");
 
     text = document.createTextNode(content);
-		label.setAttribute("web-skeleton-label", content);
+    label.setAttribute("web-skeleton-label", content);
     label.style.position = "absolute";
     label.style.top = top;
     label.style.left = left;
     label.style.right = right;
     label.style.bottom = bottom;
-		label.style.width = "auto";
-		label.style.height = "auto";
+    label.style.width = "auto";
+    label.style.height = "auto";
     label.style.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
     label.style.fontWeight = "bold";
     label.style.letterSpacing = "1px";
@@ -68,7 +83,7 @@ function injectedFunction() {
     type,
     domElements,
     color,
-		overlayColor,
+    overlayColor,
     displayLabel,
     displayLines,
     displayOverlay,
@@ -87,12 +102,10 @@ function injectedFunction() {
     for (let i = 0; i < domElements.length; i++) {
       target = domElements[i];
       updatePosition = false;
-
-      isVisible = isElementVisible(target);
+      isVisible = isElementVisible(target, query);
 
       if (isVisible) {
         if (displayLabel && !displayOverlay) {
-          // + " " + target.className
           label = createLabel(
             type == "className" ? kebabize(query) : query,
             "0px",
@@ -105,7 +118,11 @@ function injectedFunction() {
           updatePosition = true;
         }
 
-        if (displayLines) {
+        // Check if this item already have lines, if it does, then ignore adding more lines to it.
+        if (
+          displayLines &&
+          target.getElementsByClassName("web-skeleton-line-top").length <= 0
+        ) {
           line = document.createElement("div");
           line.classList.add("web-skeleton-line-top");
           line.style.position = "absolute";
@@ -153,6 +170,7 @@ function injectedFunction() {
           updatePosition = true;
         }
 
+        // TODO: check if this item already have overlay, if it does, then ignore adding a new overlay.
         if (displayOverlay) {
           overlay = document.createElement("div");
           overlay.classList.add("web-skeleton-overlay");
@@ -163,7 +181,7 @@ function injectedFunction() {
           overlay.style.width = "100%";
           overlay.style.height = "100%";
           overlay.style.backgroundColor = overlayColor;
-					overlay.style.pointerEvents = "none";
+          overlay.style.pointerEvents = "none";
           if (overlayTarget == "parent") {
             overlayTargetElement = target.parentElement;
           } else {
@@ -204,9 +222,9 @@ function injectedFunction() {
             target.style.position = "relative";
           }
         }
+        target.classList.add("web-skeleton");
+        target.style.outline = "1px " + color + " solid";
       }
-      target.classList.add("web-skeleton");
-      target.style.outline = "1px " + color + " solid";
     }
   };
 
@@ -290,7 +308,9 @@ function injectedFunction() {
 
     if (body.getAttribute("WebSkeleton")) {
       if (body.getElementsByClassName("web-skeleton-viewport-label")) {
-        viewportLabel = body.getElementsByClassName("web-skeleton-viewport-label")[0];
+        viewportLabel = body.getElementsByClassName(
+          "web-skeleton-viewport-label"
+        )[0];
         body.removeChild(viewportLabel);
       }
       window.removeEventListener("resize", onResizeHandler);
@@ -341,6 +361,7 @@ function injectedFunction() {
           (elementDiv) => elementDiv.className.indexOf(element.query) >= 1
         );
       }
+
       if (domElements && domElements.length >= 1) {
         if (state == "remove") {
           removeDebugDecoration();
@@ -351,7 +372,7 @@ function injectedFunction() {
             element.type ? element.type : "",
             domElements,
             element.color ? element.color : colorTest,
-						element.overlayColor ? element.overlayColor : color5,
+            element.overlayColor ? element.overlayColor : color5,
             element.displayLabel ? element.displayLabel : false,
             element.displayLines ? element.displayLines : false,
             element.displayOverlay ? element.displayOverlay : false,
@@ -412,7 +433,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "h6",
       type: "query",
       color: color3,
@@ -420,7 +441,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "h7",
       type: "query",
       color: color3,
@@ -428,7 +449,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "h8",
       type: "query",
       color: color3,
@@ -464,17 +485,17 @@ function injectedFunction() {
       query: "img",
       type: "query",
       color: color3,
-			overlayColor: color5,
+      overlayColor: color5,
       displayLabel: true,
       displayLines: false,
       displayOverlay: true,
       overlayTarget: "parent",
     },
-		{
+    {
       query: "video",
       type: "query",
       color: color3,
-			overlayColor: color6,
+      overlayColor: color6,
       displayLabel: false,
       displayLines: false,
       displayOverlay: true,
@@ -484,19 +505,21 @@ function injectedFunction() {
       query: "figure",
       type: "query",
       color: color3,
+      overlayColor: color6,
       displayLabel: false,
       displayLines: false,
-      displayOverlay: false,
+      displayOverlay: true,
+      overlayTarget: "self",
     },
     {
       query: "canvas",
       type: "query",
       color: color2,
-			overlayColor: color5,
+      overlayColor: color7,
       displayLabel: true,
       displayLines: false,
       displayOverlay: true,
-			overlayTarget: "parent",
+      overlayTarget: "parent",
     },
     {
       query: "wrapper",
@@ -546,7 +569,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "quote",
       type: "contains",
       color: color4,
@@ -554,7 +577,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "text",
       type: "contains",
       color: color4,
@@ -562,8 +585,16 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "txt",
+      type: "contains",
+      color: color4,
+      displayLabel: false,
+      displayLines: false,
+      displayOverlay: false,
+    },
+    {
+      query: "col",
       type: "contains",
       color: color4,
       displayLabel: false,
@@ -602,7 +633,7 @@ function injectedFunction() {
       displayLines: false,
       displayOverlay: false,
     },
-		{
+    {
       query: "form",
       type: "query",
       color: color3,
@@ -614,12 +645,12 @@ function injectedFunction() {
       query: "svg",
       type: "query",
       color: color4,
-			overlayColor: color7,
+      overlayColor: color7,
       displayLabel: false,
       displayLines: false,
       displayOverlay: true,
-			overlayTarget: "parent",
-		},
+      overlayTarget: "parent",
+    },
   ];
 
   toggleDecorations(elements);
