@@ -543,7 +543,7 @@ function injectedFunction() {
       displayOverlay: true,
       overlayTarget: "parent",
     },
-		{
+    {
       query: "svg",
       type: "query",
       color: color4,
@@ -564,7 +564,7 @@ function injectedFunction() {
       type: "contains",
       color: color4,
     },
-		{
+    {
       query: "content",
       type: "contains",
       color: color4,
@@ -639,17 +639,17 @@ function injectedFunction() {
       type: "query",
       color: color3,
     },
-		{
+    {
       query: "tr",
       type: "query",
       color: color6,
     },
-		{
+    {
       query: "td",
       type: "query",
       color: color7,
     },
-		{
+    {
       query: "strong",
       type: "query",
       color: color7,
@@ -660,8 +660,8 @@ function injectedFunction() {
 }
 
 chrome.action.onClicked.addListener((tab) => {
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: injectedFunction,
-  });
+	chrome.scripting.executeScript({
+		target: { tabId: tab.id },
+		func: injectedFunction,
+	});
 });
