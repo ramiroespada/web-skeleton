@@ -17,6 +17,8 @@ function injectedFunction() {
   const color5 = "rgba(222,0,255,0.3)";
   const color6 = "rgba(222,0,255,0.2)";
   const color7 = "rgba(222,0,255,0.1)";
+  const colors = [color1, color2, color3, color4, color5, color6, color7];
+
   const colorTest = "rgba(0, 0, 255, 1)";
 
   const isElementVisible = (target, query) => {
@@ -35,6 +37,13 @@ function injectedFunction() {
       query == "h7"
     ) {
       if (String(target.textContent).length <= 1) {
+        console.log(
+          "RE / query: " +
+            query +
+            "  length: " +
+            String(target.textContent).length
+        );
+        console.log("RE / [background.js:41]: target: ", target);
         return false;
       }
     }
@@ -45,7 +54,7 @@ function injectedFunction() {
     }
 
     let size = target.getBoundingClientRect();
-    if (size.width <= 1 || size.height <= 1) return false;
+    if (size.width <= 12 || size.height <= 12) return false;
 
     if (style.getPropertyValue("visibility") == "hidden") {
       return false;
@@ -131,6 +140,8 @@ function injectedFunction() {
       isVisible = isElementVisible(target, query);
 
       if (isVisible) {
+        style = window.getComputedStyle(target);
+
         if (displayOverlay || displayLabel) {
           if (overlayTarget == "parent") {
             overlayTargetElement = target.parentElement;
@@ -141,15 +152,51 @@ function injectedFunction() {
         }
 
         if (displayLabel && !displayOverlay) {
-          label = createLabel(
-            type == "className" ? kebabize(query) : query,
-            "0px",
-            "auto",
-            "auto",
-            "-1px",
-            "translateY(-100%)",
-            false
-          );
+          if (
+            (query == "p" && style.getPropertyValue("display") == "inline") ||
+            query == "section" ||
+            query == "container"
+          ) {
+            label = createLabel(
+              type == "className" ? kebabize(query) : query,
+              "0px",
+              "0px",
+              "auto",
+              "auto",
+              "translateY(-100%)",
+              false
+            );
+          } else if (query == "footer") {
+            label = createLabel(
+              type == "className" ? kebabize(query) : query,
+              "0px",
+              "0px",
+              "auto",
+              "auto",
+              "none",
+              false
+            );
+          } else if (query == "content") {
+            label = createLabel(
+              type == "className" ? kebabize(query) : query,
+              "0px",
+              "auto",
+              "auto",
+              "-1px",
+              "none",
+              false
+            );
+          } else {
+            label = createLabel(
+              type == "className" ? kebabize(query) : query,
+              "0px",
+              "auto",
+              "auto",
+              "-1px",
+              "translateY(-100%)",
+              false
+            );
+          }
           overlayTargetElement.appendChild(label);
           updatePosition = true;
         }
@@ -218,8 +265,6 @@ function injectedFunction() {
           setRelativePosition(target);
         }
 
-        style = window.getComputedStyle(target);
-
         if (style.getPropertyValue("outline-width") == "0px") {
           target.style.outline = "1px " + color + " solid";
           target.classList.add("web-skeleton");
@@ -252,7 +297,7 @@ function injectedFunction() {
         } else {
           if (target.classList.contains("web-skeleton")) {
             target.classList.remove("web-skeleton");
-						target.style.outline = "none";
+            target.style.outline = "none";
           }
         }
         if (query == "svg") {
@@ -391,6 +436,9 @@ function injectedFunction() {
 
       body.style.overflowX = "hidden";
       body.setAttribute("WebSkeleton", "true");
+
+      // Sorting element by color so stronger colors have priority over blended ones.
+      elements.sort((a, b) => parseFloat(a.color) - parseFloat(b.color));
     }
 
     const allElements = body.querySelectorAll("div, span");
@@ -415,7 +463,7 @@ function injectedFunction() {
           element.query ? element.query : "",
           element.type ? element.type : "",
           domElements,
-          element.color ? element.color : colorTest,
+          element.color ? colors[element.color - 1] : colorTest,
           element.overlayColor ? element.overlayColor : color5,
           element.displayLabel ? element.displayLabel : false,
           element.displayLines ? element.displayLines : false,
@@ -428,85 +476,88 @@ function injectedFunction() {
   };
 
   const elements = [
-    {
+    /*
+		{
       query: "viewportContent",
       type: "className",
-      color: color3,
+      color: 1,
       displayLabel: true,
     },
+		*/
     {
       query: "h1",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
       displayLines: true,
     },
+
     {
       query: "h2",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
       displayLines: true,
     },
     {
       query: "h3",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
       displayLines: true,
     },
     {
       query: "h4",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
       displayLines: true,
     },
     {
       query: "h5",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
     },
     {
       query: "h6",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
     },
     {
       query: "h7",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
     },
     {
       query: "h8",
       type: "query",
-      color: color3,
+      color: 3,
       displayLabel: true,
     },
     {
       query: "p",
       type: "query",
-      color: color3,
+      color: 4,
       displayLabel: true,
       displayLines: true,
     },
     {
       query: "a",
       type: "query",
-      color: color4,
+      color: 4,
     },
     {
       query: "button",
       type: "query",
-      color: color3,
+      color: 3,
     },
     {
       query: "img",
       type: "query",
-      color: color3,
+      color: 3,
       overlayColor: color6,
       displayLabel: true,
       displayOverlay: true,
@@ -515,18 +566,18 @@ function injectedFunction() {
     {
       query: "video",
       type: "query",
-      color: color4,
+      color: 4,
     },
     {
       query: "figure",
       type: "query",
-      color: color4,
+      color: 4,
       overlayColor: color6,
     },
     {
       query: "canvas",
       type: "query",
-      color: color3,
+      color: 3,
       overlayColor: color6,
       displayOverlay: true,
       overlayTarget: "parent",
@@ -534,149 +585,153 @@ function injectedFunction() {
     {
       query: "svg",
       type: "query",
-      color: color3,
+      color: 3,
       overlayColor: color6,
     },
     {
       query: "player",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "film",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "wrapper",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "item",
       type: "contains",
-      color: color6,
+      color: 6,
     },
     {
       query: "container",
       type: "contains",
-      color: color3,
+      color: 3,
+      displayLabel: true,
     },
     {
       query: "content",
       type: "contains",
-      color: color4,
+      color: 4,
+      displayLabel: true,
     },
     {
       query: "badge",
       type: "className",
-      color: color4,
+      color: 4,
     },
     {
       query: "row",
       type: "contains",
-      color: color5,
+      color: 5,
     },
     {
       query: "column",
       type: "contains",
-      color: color5,
+      color: 5,
     },
     {
       query: "quote",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "text",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "txt",
       type: "contains",
-      color: color4,
+      color: 4,
     },
     {
       query: "col",
       type: "contains",
-      color: color5,
+      color: 5,
     },
     {
       query: "headline",
       type: "contains",
-      color: color5,
+      color: 5,
     },
     {
       query: "tile",
       type: "contains",
-      color: color5,
+      color: 5,
     },
     {
       query: "inlineCompareWrap",
       type: "className",
-      color: color4,
+      color: 4,
     },
     {
       query: "card",
       type: "className",
-      color: color3,
+      color: 3,
     },
     {
       query: "section",
       type: "className",
-      color: color3,
+      color: 3,
+      displayLabel: true,
     },
     {
       query: "small",
       type: "query",
-      color: color3,
+      color: 3,
     },
     {
       query: "li",
       type: "query",
-      color: color5,
+      color: 5,
     },
     {
       query: "form",
       type: "query",
-      color: color5,
+      color: 5,
     },
     {
       query: "tr",
       type: "query",
-      color: color6,
+      color: 6,
     },
     {
       query: "td",
       type: "query",
-      color: color7,
+      color: 7,
     },
     {
       query: "strong",
       type: "query",
-      color: color7,
+      color: 7,
     },
 
-		{
+    {
       query: "footer",
       type: "query",
-      color: color5,
+      color: 5,
+      displayLabel: true,
     },
-		{
+    {
       query: "nav",
       type: "query",
-      color: color5,
+      color: 5,
     },
-		{
+    {
       query: "figcaption",
       type: "query",
-      color: color5,
+      color: 5,
     },
-		{
+    {
       query: "caption",
       type: "query",
-      color: color5,
+      color: 5,
     },
   ];
 
