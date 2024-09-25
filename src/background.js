@@ -44,6 +44,9 @@ function injectedFunction() {
       return false;
     }
 
+    let size = target.getBoundingClientRect();
+    if (size.width <= 1 || size.height <= 1) return false;
+
     if (style.getPropertyValue("visibility") == "hidden") {
       return false;
     }
@@ -159,49 +162,29 @@ function injectedFunction() {
           line.classList.add("web-skeleton-line-top");
           line.style.position = "absolute";
           line.style.top = "-1px";
-          line.style.left = "calc(100% + 1px)";
-          line.style.width = "100vw";
+          line.style.left = "50%";
+          line.style.width = "200vw";
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
-          line.style.zIndex = 999;
+					line.style.transform = "translateX(-50%)";
+					line.style.zIndex = 999;
           target.appendChild(line);
 
-          line = document.createElement("div");
-          line.classList.add("web-skeleton-line-top");
-          line.style.position = "absolute";
-          line.style.top = "-1px";
-          line.style.left = "calc(-100vw - 1px)";
-          line.style.width = "100vw";
-          line.style.height = "1px";
-          line.style.background = color6;
-          line.style.pointerEvents = "none";
-          line.style.zIndex = 999;
-          target.appendChild(line);
 
           line = document.createElement("div");
           line.classList.add("web-skeleton-line-bottom");
           line.style.position = "absolute";
           line.style.top = "100%";
-          line.style.left = "calc(100% + 1px)";
-          line.style.width = "100vw";
+					line.style.left = "50%";
+          line.style.width = "200vw";
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
+					line.style.transform = "translateX(-50%)";
           line.style.zIndex = 999;
           target.appendChild(line);
 
-          line = document.createElement("div");
-          line.classList.add("web-skeleton-line-bottom");
-          line.style.position = "absolute";
-          line.style.top = "100%";
-          line.style.left = "calc(-100vw - 1px)";
-          line.style.width = "100vw";
-          line.style.height = "1px";
-          line.style.background = color6;
-          line.style.pointerEvents = "none";
-          line.style.zIndex = 999;
-          target.appendChild(line);
           updatePosition = true;
         }
 
@@ -260,23 +243,25 @@ function injectedFunction() {
   const removeElementsByClass = (name, isParent, query) => {
     let domElements, target, parentElement;
     domElements = document.getElementsByClassName(name);
-    for (let i = 0; i < domElements.length; i++) {
-      target = domElements[i];
-      if (isParent) {
-        parentElement = target.parentElement;
-        parentElement.removeChild(target);
-      } else {
-        target.style.outline = "none";
-      }
-      if (query == "svg") {
-        target.style.backgroundColor = target.getAttribute(
-          "web-skeleton-svg-bg"
-        );
-      }
-      if (query == "figure") {
-        target.style.backgroundColor = target.getAttribute(
-          "web-skeleton-figure-bg"
-        );
+    if (domElements) {
+      for (let i = 0; i < domElements.length; i++) {
+        target = domElements[i];
+        if (isParent) {
+          parentElement = target.parentElement;
+          parentElement.removeChild(target);
+        } else {
+          target.style.outline = "none";
+        }
+        if (query == "svg") {
+          target.style.backgroundColor = target.getAttribute(
+            "web-skeleton-svg-bg"
+          );
+        }
+        if (query == "figure") {
+          target.style.backgroundColor = target.getAttribute(
+            "web-skeleton-figure-bg"
+          );
+        }
       }
     }
   };
@@ -284,11 +269,11 @@ function injectedFunction() {
   const removeDebugDecoration = () => {
     removeElementsByClass("web-skeleton-svg", false, "svg");
     removeElementsByClass("web-skeleton-figure", false, "figure");
-    removeElementsByClass("web-skeleton", false, false);
-    removeElementsByClass("web-skeleton-overlay", true, false);
-    removeElementsByClass("web-skeleton-label", true, false);
-    removeElementsByClass("web-skeleton-line-top", true, false);
-    removeElementsByClass("web-skeleton-line-bottom", true, false);
+    removeElementsByClass("web-skeleton", false, "");
+    removeElementsByClass("web-skeleton-overlay", true, "");
+    removeElementsByClass("web-skeleton-label", true, "");
+    removeElementsByClass("web-skeleton-line-top", true, "");
+    removeElementsByClass("web-skeleton-line-bottom", true, "");
   };
 
   const updateOverlaysLabel = () => {
@@ -312,7 +297,7 @@ function injectedFunction() {
         } else {
           label.style.visibility = "visible";
           label.textContent =
-            Math.round(size.width) + " X " + Math.round(size.height);
+            Math.round(size.width) + " x " + Math.round(size.height);
         }
       }
     }
@@ -347,7 +332,7 @@ function injectedFunction() {
       if (vw > 1440) {
         content = "XL";
       }
-      content += "&nbsp;" + vw + " X " + vh;
+      content += "&nbsp;" + vw + " x " + vh;
       label.innerHTML = content;
     }
   };
@@ -359,7 +344,7 @@ function injectedFunction() {
 
   const toggleDecorations = (elements) => {
     const body = document.getElementsByTagName("body")[0];
-    let state, viewportLabel;
+    let viewportLabel;
 
     if (body.getAttribute("WebSkeleton")) {
       if (body.getElementsByClassName("web-skeleton-viewport-label")) {
@@ -371,7 +356,12 @@ function injectedFunction() {
       window.removeEventListener("resize", onResizeHandler);
       window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("WebSkeleton");
-      state = "remove";
+			//
+      for (let i = 0; i <22; i++) {
+        removeDebugDecoration();
+      }
+      return;
+			//
     } else {
       viewportLabel = document.createElement("div");
       viewportLabel.classList.add("web-skeleton-viewport-label");
@@ -398,8 +388,9 @@ function injectedFunction() {
 
       body.style.overflowX = "hidden";
       body.setAttribute("WebSkeleton", "true");
-      state = "add";
     }
+
+    const allElements = body.querySelectorAll("div");
 
     elements.forEach((element) => {
       let domElements;
@@ -411,30 +402,25 @@ function injectedFunction() {
       }
 
       if (element.type == "contains") {
-        const allElements = document.querySelectorAll("div");
+        console.log("RE / allElements: ", allElements.length);
         domElements = [...allElements].filter(
-          (elementDiv) => elementDiv.className.indexOf(element.query) >= 1
+          (elementDiv) => elementDiv.className.indexOf(element.query) >= 0
         );
       }
 
       if (domElements && domElements.length >= 1) {
-        if (state == "remove") {
-          removeDebugDecoration();
-        }
-        if (state == "add") {
-          addDebugDecoration(
-            element.query ? element.query : "",
-            element.type ? element.type : "",
-            domElements,
-            element.color ? element.color : colorTest,
-            element.overlayColor ? element.overlayColor : color5,
-            element.displayLabel ? element.displayLabel : false,
-            element.displayLines ? element.displayLines : false,
-            element.displayOverlay ? element.displayOverlay : false,
-            element.overlayTarget ? element.overlayTarget : "self"
-          );
-          updateOverlaysLabel();
-        }
+        addDebugDecoration(
+          element.query ? element.query : "",
+          element.type ? element.type : "",
+          domElements,
+          element.color ? element.color : colorTest,
+          element.overlayColor ? element.overlayColor : color5,
+          element.displayLabel ? element.displayLabel : false,
+          element.displayLines ? element.displayLines : false,
+          element.displayOverlay ? element.displayOverlay : false,
+          element.overlayTarget ? element.overlayTarget : "self"
+        );
+        updateOverlaysLabel();
       }
     });
   };
@@ -443,7 +429,7 @@ function injectedFunction() {
     {
       query: "viewportContent",
       type: "className",
-      color: color2,
+      color: color3,
       displayLabel: true,
     },
     {
@@ -527,18 +513,18 @@ function injectedFunction() {
     {
       query: "video",
       type: "query",
-      color: color3,
+      color: color4,
     },
     {
       query: "figure",
       type: "query",
-      color: color3,
+      color: color4,
       overlayColor: color6,
     },
     {
       query: "canvas",
       type: "query",
-      color: color2,
+      color: color3,
       overlayColor: color6,
       displayOverlay: true,
       overlayTarget: "parent",
@@ -546,8 +532,18 @@ function injectedFunction() {
     {
       query: "svg",
       type: "query",
-      color: color4,
+      color: color3,
       overlayColor: color6,
+    },
+    {
+      query: "player",
+      type: "contains",
+      color: color4,
+    },
+    {
+      query: "film",
+      type: "contains",
+      color: color4,
     },
     {
       query: "wrapper",
@@ -557,12 +553,12 @@ function injectedFunction() {
     {
       query: "item",
       type: "contains",
-      color: color4,
+      color: color6,
     },
     {
       query: "container",
       type: "contains",
-      color: color4,
+      color: color3,
     },
     {
       query: "content",
@@ -577,12 +573,12 @@ function injectedFunction() {
     {
       query: "row",
       type: "contains",
-      color: color4,
+      color: color5,
     },
     {
       query: "column",
       type: "contains",
-      color: color4,
+      color: color5,
     },
     {
       query: "quote",
@@ -602,12 +598,17 @@ function injectedFunction() {
     {
       query: "col",
       type: "contains",
-      color: color4,
+      color: color5,
     },
     {
       query: "headline",
       type: "contains",
-      color: color4,
+      color: color5,
+    },
+    {
+      query: "tile",
+      type: "contains",
+      color: color5,
     },
     {
       query: "inlineCompareWrap",
@@ -622,7 +623,7 @@ function injectedFunction() {
     {
       query: "section",
       type: "className",
-      color: color2,
+      color: color3,
     },
     {
       query: "small",
@@ -660,8 +661,8 @@ function injectedFunction() {
 }
 
 chrome.action.onClicked.addListener((tab) => {
-	chrome.scripting.executeScript({
-		target: { tabId: tab.id },
-		func: injectedFunction,
-	});
+  chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    func: injectedFunction,
+  });
 });
