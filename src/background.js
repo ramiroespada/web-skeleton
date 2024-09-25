@@ -167,24 +167,22 @@ function injectedFunction() {
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
-					line.style.transform = "translateX(-50%)";
-					line.style.zIndex = 999;
+          line.style.transform = "translateX(-50%)";
+          line.style.zIndex = 999;
           target.appendChild(line);
-
 
           line = document.createElement("div");
           line.classList.add("web-skeleton-line-bottom");
           line.style.position = "absolute";
           line.style.top = "100%";
-					line.style.left = "50%";
+          line.style.left = "50%";
           line.style.width = "200vw";
           line.style.height = "1px";
           line.style.background = color6;
           line.style.pointerEvents = "none";
-					line.style.transform = "translateX(-50%)";
+          line.style.transform = "translateX(-50%)";
           line.style.zIndex = 999;
           target.appendChild(line);
-
           updatePosition = true;
         }
 
@@ -220,19 +218,21 @@ function injectedFunction() {
           setRelativePosition(target);
         }
 
-        target.classList.add("web-skeleton");
-        target.style.outline = "1px " + color + " solid";
+        style = window.getComputedStyle(target);
+
+        if (style.getPropertyValue("outline-width") == "0px") {
+          target.style.outline = "1px " + color + " solid";
+          target.classList.add("web-skeleton");
+        }
 
         if (query == "svg") {
           target.classList.add("web-skeleton-svg");
-          style = window.getComputedStyle(target);
           target.setAttribute("web-skeleton-svg-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
         }
 
         if (query == "figure") {
           target.classList.add("web-skeleton-figure");
-          style = window.getComputedStyle(target);
           target.setAttribute("web-skeleton-figure-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
         }
@@ -250,7 +250,10 @@ function injectedFunction() {
           parentElement = target.parentElement;
           parentElement.removeChild(target);
         } else {
-          target.style.outline = "none";
+          if (target.classList.contains("web-skeleton")) {
+            target.classList.remove("web-skeleton");
+						target.style.outline = "none";
+          }
         }
         if (query == "svg") {
           target.style.backgroundColor = target.getAttribute(
@@ -356,12 +359,12 @@ function injectedFunction() {
       window.removeEventListener("resize", onResizeHandler);
       window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("WebSkeleton");
-			//
-      for (let i = 0; i <22; i++) {
+      //
+      for (let i = 0; i < 22; i++) {
         removeDebugDecoration();
       }
       return;
-			//
+      //
     } else {
       viewportLabel = document.createElement("div");
       viewportLabel.classList.add("web-skeleton-viewport-label");
@@ -379,7 +382,7 @@ function injectedFunction() {
       viewportLabel.style.background = color1;
       viewportLabel.style.padding = "6px";
       viewportLabel.style.textAlign = "right";
-      viewportLabel.style.zIndex = "9999";
+      viewportLabel.style.zIndex = "999999";
       body.appendChild(viewportLabel);
 
       window.addEventListener("resize", onResizeHandler);
@@ -390,7 +393,7 @@ function injectedFunction() {
       body.setAttribute("WebSkeleton", "true");
     }
 
-    const allElements = body.querySelectorAll("div");
+    const allElements = body.querySelectorAll("div, span");
 
     elements.forEach((element) => {
       let domElements;
@@ -402,7 +405,6 @@ function injectedFunction() {
       }
 
       if (element.type == "contains") {
-        console.log("RE / allElements: ", allElements.length);
         domElements = [...allElements].filter(
           (elementDiv) => elementDiv.className.indexOf(element.query) >= 0
         );
@@ -633,12 +635,12 @@ function injectedFunction() {
     {
       query: "li",
       type: "query",
-      color: color3,
+      color: color5,
     },
     {
       query: "form",
       type: "query",
-      color: color3,
+      color: color5,
     },
     {
       query: "tr",
@@ -654,6 +656,27 @@ function injectedFunction() {
       query: "strong",
       type: "query",
       color: color7,
+    },
+
+		{
+      query: "footer",
+      type: "query",
+      color: color5,
+    },
+		{
+      query: "nav",
+      type: "query",
+      color: color5,
+    },
+		{
+      query: "figcaption",
+      type: "query",
+      color: color5,
+    },
+		{
+      query: "caption",
+      type: "query",
+      color: color5,
     },
   ];
 
