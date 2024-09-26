@@ -41,7 +41,7 @@ function injectedFunction() {
       if (String(target.textContent).length <= 1) {
         return false;
       }
-      if (size.width <= 10) return false;
+      if (size.width <= 10 || size.height <= 10) return false;
     }
 
     style = window.getComputedStyle(target);
@@ -49,8 +49,12 @@ function injectedFunction() {
       return false;
     }
 
+		if (query == "container" || query == "content") {
+			if (size.width <= 22 || size.height <= 60) return false;
+		}
+
     if (query != "img" || query != "svg") {
-      if (size.width <= 2 || size.height <= 2) return false;
+      return true;
     }
 
     if (style.getPropertyValue("visibility") == "hidden") {
@@ -79,9 +83,13 @@ function injectedFunction() {
     let tX = "translateX(0)";
     let tY = "translateY(0)";
 
+		if (position.slice(0, 1) == "T" && position.slice(2, 3) == "O") {
+			tY = "translateY(-100%)";
+		}
+
     if (position.slice(0, 1) == "B") {
       top = "auto";
-      bottom = "0px";
+      bottom = "-1px";
     }
 
     if (position.slice(0, 1) == "C") {
@@ -92,7 +100,7 @@ function injectedFunction() {
 
     if (position.slice(1, 2) == "R") {
       left = "auto";
-      right = "0px";
+      right = "-1px";
     }
 
     if (position.slice(1, 2) == "C") {
@@ -130,6 +138,7 @@ function injectedFunction() {
     label.style.whiteSpace = "nowrap";
     label.style.filter = "none";
     label.style.webkitTextFillColor = "white";
+		label.style.outline = "none";
     label.style.zIndex = 999;
     label.appendChild(text);
 
@@ -201,7 +210,7 @@ function injectedFunction() {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
-              "TR"
+              "TRI"
             );
           } else if (
             query == "h1" ||
@@ -215,7 +224,7 @@ function injectedFunction() {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
-              "CR"
+              "TR"
             );
           } else {
             label = createLabel(
@@ -508,7 +517,6 @@ function injectedFunction() {
       displayLabel: true,
       displayLines: true,
     },
-
     {
       query: "h2",
       type: "query",
@@ -605,6 +613,11 @@ function injectedFunction() {
       color: 3,
       overlayColor: color6,
     },
+		{
+      query: "copy",
+      type: "contains",
+      color: 4,
+    },
     {
       query: "player",
       type: "contains",
@@ -615,8 +628,18 @@ function injectedFunction() {
       type: "contains",
       color: 4,
     },
+		{
+      query: "logo",
+      type: "contains",
+      color: 4,
+    },
     {
       query: "wrapper",
+      type: "contains",
+      color: 4,
+    },
+		{
+      query: "holder",
       type: "contains",
       color: 4,
     },
@@ -674,6 +697,11 @@ function injectedFunction() {
     },
     {
       query: "headline",
+      type: "contains",
+      color: 5,
+    },
+		{
+      query: "title",
       type: "contains",
       color: 5,
     },
