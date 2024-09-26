@@ -26,6 +26,8 @@ function injectedFunction() {
       return false;
     }
 
+		let size = target.getBoundingClientRect();
+
     if (
       query == "p" ||
       query == "h1" ||
@@ -39,16 +41,15 @@ function injectedFunction() {
       if (String(target.textContent).length <= 1) {
         return false;
       }
+			if (size.width <= 10) return false;
     }
-
 
     style = window.getComputedStyle(target);
     if (style.getPropertyValue("display") == "none") {
       return false;
     }
 
-    let size = target.getBoundingClientRect();
-    if (size.width <= 12 || size.height <= 12) return false;
+		if (size.width <= 2 || size.height <= 2) return false;
 
     if (style.getPropertyValue("visibility") == "hidden") {
       return false;
@@ -84,21 +85,21 @@ function injectedFunction() {
     label.style.height = "auto";
     label.style.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
     label.style.fontWeight = "bold";
-    label.style.letterSpacing = "2px";
+    label.style.letterSpacing = "1px";
     label.style.fontSize = "9px";
-    label.style.lineHeight = "9px";
+    label.style.lineHeight = "8px";
     label.style.textTransform = "none";
     label.style.color = "white";
     label.style.background = color1;
-    label.style.padding = "6px";
-		label.style.margin = "0px";
+    label.style.padding = "4px";
+    label.style.margin = "0px";
     label.style.pointerEvents = "none";
     label.style.textAlign = "left";
-		label.style.overflow = "hidden";
+    label.style.overflow = "hidden";
     label.style.transform = transform;
     label.style.whiteSpace = "nowrap";
-		label.style.filter = "none";
-		label.style.webkitTextFillColor = "white";
+    label.style.filter = "none";
+    label.style.webkitTextFillColor = "white";
     label.style.zIndex = 999;
     label.appendChild(text);
 
@@ -155,26 +156,25 @@ function injectedFunction() {
           !displayOverlay &&
           target.getBoundingClientRect().width > 100
         ) {
-					console.log("RE / [background.js:158]: ", style.getPropertyValue("display"));
-          if (
-            query == "section" ||
-            query == "container"
-          ) {
+          if (query == "section" || query == "container") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               "0px",
-              "0px",
+              "-1px",
               "auto",
               "auto",
               "translateY(-100%)",
               false
             );
-					} else if (query == "p" && style.getPropertyValue("display") == "inline"){
-						// Skip this element for now
+          } else if (
+            query == "p" &&
+            style.getPropertyValue("display") == "inline"
+          ) {
+            // Skip this element for now
           } else if (query == "footer") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
-              "0px",
+              "-1px",
               "0px",
               "auto",
               "auto",
@@ -184,7 +184,7 @@ function injectedFunction() {
           } else if (query == "content") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
-              "0px",
+              "-1px",
               "auto",
               "auto",
               "-1px",
@@ -211,6 +211,7 @@ function injectedFunction() {
           target.getElementsByClassName("web-skeleton-line-top").length <= 0
         ) {
           line = document.createElement("div");
+          line.classList.add("web-skeleton-line");
           line.classList.add("web-skeleton-line-top");
           line.style.position = "absolute";
           line.style.top = "-1px";
@@ -224,6 +225,7 @@ function injectedFunction() {
           target.appendChild(line);
 
           line = document.createElement("div");
+          line.classList.add("web-skeleton-line");
           line.classList.add("web-skeleton-line-bottom");
           line.style.position = "absolute";
           line.style.top = "100%";
@@ -285,37 +287,6 @@ function injectedFunction() {
           target.classList.add("web-skeleton-figure");
           target.setAttribute("web-skeleton-figure-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
-        }
-      }
-    }
-  };
-
-	const hideOverlappingLines = () => {
-		// TODO: implement!
-	};
-
-  const hideOverlappingLabels = (key) => {
-    const domElements = document.getElementsByClassName(
-      "web-skeleton-label-" + key
-    );
-    const padding = 6;
-    let ele1, ele2, collides;
-    for (let i = 0; i < domElements.length; i++) {
-      ele1 = domElements[i];
-      for (let a = 0; a < domElements.length; a++) {
-				ele2 = domElements[a];
-        if (ele1 != ele2) {
-          let r1 = ele1.getBoundingClientRect();
-          let r2 = ele2.getBoundingClientRect();
-          collides =
-            r1.y <= r2.y + r2.height - padding &&
-            r1.y + r1.height - padding >= r2.y &&
-            r1.x <= r2.x + r2.width - padding &&
-            r1.x + r1.width - padding >= r2.y;
-          if (collides) {
-						ele1.style.visibility = "hidden";
-						break;
-          }
         }
       }
     }
@@ -389,8 +360,6 @@ function injectedFunction() {
 
   const onScrollHandler = () => {
     updateOverlaysLabel();
-		hideOverlappingLabels("content");
-		hideOverlappingLines();
   };
 
   const updateViewportLabel = () => {
@@ -511,8 +480,7 @@ function injectedFunction() {
         updateOverlaysLabel();
       }
     });
-		hideOverlappingLabels("content");
-		hideOverlappingLines();
+    hideOverlappingLines();
   };
 
   const elements = [
@@ -638,7 +606,7 @@ function injectedFunction() {
     {
       query: "item",
       type: "contains",
-      color: 6,
+      color: 4,
     },
     {
       query: "container",
@@ -695,7 +663,7 @@ function injectedFunction() {
     {
       query: "tile",
       type: "contains",
-      color: 5,
+      color: 4,
     },
     {
       query: "inlineCompareWrap",
@@ -721,12 +689,12 @@ function injectedFunction() {
     {
       query: "li",
       type: "query",
-      color: 5,
+      color: 4,
     },
     {
       query: "form",
       type: "query",
-      color: 5,
+      color: 4,
     },
     {
       query: "tr",
@@ -741,7 +709,7 @@ function injectedFunction() {
     {
       query: "strong",
       type: "query",
-      color: 7,
+      color: 5,
     },
 
     {
