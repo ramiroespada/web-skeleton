@@ -26,7 +26,7 @@ function injectedFunction() {
       return false;
     }
 
-		let size = target.getBoundingClientRect();
+    let size = target.getBoundingClientRect();
 
     if (
       query == "p" ||
@@ -41,7 +41,7 @@ function injectedFunction() {
       if (String(target.textContent).length <= 1) {
         return false;
       }
-			if (size.width <= 10) return false;
+      if (size.width <= 10) return false;
     }
 
     style = window.getComputedStyle(target);
@@ -49,7 +49,9 @@ function injectedFunction() {
       return false;
     }
 
-		if (size.width <= 2 || size.height <= 2) return false;
+    if (query != "img" || query != "svg") {
+      if (size.width <= 2 || size.height <= 2) return false;
+    }
 
     if (style.getPropertyValue("visibility") == "hidden") {
       return false;
@@ -60,12 +62,8 @@ function injectedFunction() {
 
   const createLabel = (
     query,
-    top,
-    left,
-    bottom,
-    right,
-    transform,
-    isParent
+    isParent,
+    position // TL, TC, TR
   ) => {
     let label = document.createElement("div");
     if (isParent) {
@@ -73,6 +71,38 @@ function injectedFunction() {
     } else {
       label.classList.add("web-skeleton-label");
     }
+
+    let top = "0px";
+    let left = "0px";
+    let bottom = "auto";
+    let right = "auto";
+    let tX = "translateX(0)";
+    let tY = "translateY(0)";
+
+    if (position.slice(0, 1) == "B") {
+      top = "auto";
+      bottom = "0px";
+    }
+
+    if (position.slice(0, 1) == "C") {
+      top = "50%";
+      bottom = "auto";
+      tY = "translateY(-50%)";
+    }
+
+    if (position.slice(1, 2) == "R") {
+      left = "auto";
+      right = "0px";
+    }
+
+    if (position.slice(1, 2) == "C") {
+      left = "50%";
+      right = "auto";
+      tX = "translateX(-50%)";
+    }
+
+    let transform = tX + " " + tY;
+
     label.classList.add("web-skeleton-label-" + query);
     text = document.createTextNode(query);
     label.setAttribute("web-skeleton-label", query);
@@ -156,50 +186,42 @@ function injectedFunction() {
           !displayOverlay &&
           target.getBoundingClientRect().width > 100
         ) {
-          if (query == "section" || query == "container") {
+          if (query == "section" || query == "container" || query == "footer") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
-              "0px",
-              "-1px",
-              "auto",
-              "auto",
-              "translateY(-100%)",
-              false
+              false,
+              "TL"
             );
           } else if (
             query == "p" &&
             style.getPropertyValue("display") == "inline"
           ) {
-            // Skip this element for now
-          } else if (query == "footer") {
-            label = createLabel(
-              type == "className" ? kebabize(query) : query,
-              "-1px",
-              "0px",
-              "auto",
-              "auto",
-              "none",
-              false
-            );
+            // Skip this element for now!
           } else if (query == "content") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
-              "-1px",
-              "auto",
-              "auto",
-              "-1px",
-              "none",
-              false
+              false,
+              "TR"
+            );
+          } else if (
+            query == "h1" ||
+            query == "h2" ||
+            query == "h3" ||
+            query == "h4" ||
+            query == "h5" ||
+            query == "h6" ||
+            query == "h7"
+          ) {
+            label = createLabel(
+              type == "className" ? kebabize(query) : query,
+              false,
+              "CR"
             );
           } else {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
-              "0px",
-              "auto",
-              "auto",
-              "-1px",
-              "translateY(-100%)",
-              false
+              false,
+              "BR"
             );
           }
           overlayTargetElement.appendChild(label);
@@ -256,12 +278,8 @@ function injectedFunction() {
           if (displayLabel) {
             label = createLabel(
               query,
-              "50%",
-              "50%",
-              "auto",
-              "auto",
-              "translate(-50%, -50%)",
-              overlayTarget == "parent" ? true : false
+              overlayTarget == "parent" ? true : false,
+              "CC"
             );
             overlay.appendChild(label);
           }
@@ -480,7 +498,6 @@ function injectedFunction() {
         updateOverlaysLabel();
       }
     });
-    hideOverlappingLines();
   };
 
   const elements = [
@@ -540,7 +557,7 @@ function injectedFunction() {
     {
       query: "p",
       type: "query",
-      color: 4,
+      color: 3,
       displayLabel: true,
       displayLines: true,
     },
@@ -617,7 +634,7 @@ function injectedFunction() {
     {
       query: "content",
       type: "contains",
-      color: 4,
+      color: 3,
       displayLabel: true,
     },
     {
@@ -715,7 +732,7 @@ function injectedFunction() {
     {
       query: "footer",
       type: "query",
-      color: 5,
+      color: 3,
       displayLabel: true,
     },
     {
