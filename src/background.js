@@ -37,16 +37,10 @@ function injectedFunction() {
       query == "h7"
     ) {
       if (String(target.textContent).length <= 1) {
-        console.log(
-          "RE / query: " +
-            query +
-            "  length: " +
-            String(target.textContent).length
-        );
-        console.log("RE / [background.js:41]: target: ", target);
         return false;
       }
     }
+
 
     style = window.getComputedStyle(target);
     if (style.getPropertyValue("display") == "none") {
@@ -64,7 +58,7 @@ function injectedFunction() {
   };
 
   const createLabel = (
-    content,
+    query,
     top,
     left,
     bottom,
@@ -78,8 +72,9 @@ function injectedFunction() {
     } else {
       label.classList.add("web-skeleton-label");
     }
-    text = document.createTextNode(content);
-    label.setAttribute("web-skeleton-label", content);
+    label.classList.add("web-skeleton-label-" + query);
+    text = document.createTextNode(query);
+    label.setAttribute("web-skeleton-label", query);
     label.style.position = "absolute";
     label.style.top = top;
     label.style.left = left;
@@ -96,10 +91,14 @@ function injectedFunction() {
     label.style.color = "white";
     label.style.background = color1;
     label.style.padding = "6px";
+		label.style.margin = "0px";
     label.style.pointerEvents = "none";
     label.style.textAlign = "left";
+		label.style.overflow = "hidden";
     label.style.transform = transform;
     label.style.whiteSpace = "nowrap";
+		label.style.filter = "none";
+		label.style.webkitTextFillColor = "white";
     label.style.zIndex = 999;
     label.appendChild(text);
 
@@ -151,9 +150,13 @@ function injectedFunction() {
           }
         }
 
-        if (displayLabel && !displayOverlay) {
+        if (
+          displayLabel &&
+          !displayOverlay &&
+          target.getBoundingClientRect().width > 100
+        ) {
+					console.log("RE / [background.js:158]: ", style.getPropertyValue("display"));
           if (
-            (query == "p" && style.getPropertyValue("display") == "inline") ||
             query == "section" ||
             query == "container"
           ) {
@@ -166,6 +169,8 @@ function injectedFunction() {
               "translateY(-100%)",
               false
             );
+					} else if (query == "p" && style.getPropertyValue("display") == "inline"){
+						// Skip this element for now
           } else if (query == "footer") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
@@ -285,6 +290,37 @@ function injectedFunction() {
     }
   };
 
+	const hideOverlappingLines = () => {
+		// TODO: implement!
+	};
+
+  const hideOverlappingLabels = (key) => {
+    const domElements = document.getElementsByClassName(
+      "web-skeleton-label-" + key
+    );
+    const padding = 6;
+    let ele1, ele2, collides;
+    for (let i = 0; i < domElements.length; i++) {
+      ele1 = domElements[i];
+      for (let a = 0; a < domElements.length; a++) {
+				ele2 = domElements[a];
+        if (ele1 != ele2) {
+          let r1 = ele1.getBoundingClientRect();
+          let r2 = ele2.getBoundingClientRect();
+          collides =
+            r1.y <= r2.y + r2.height - padding &&
+            r1.y + r1.height - padding >= r2.y &&
+            r1.x <= r2.x + r2.width - padding &&
+            r1.x + r1.width - padding >= r2.y;
+          if (collides) {
+						ele1.style.visibility = "hidden";
+						break;
+          }
+        }
+      }
+    }
+  };
+
   const removeElementsByClass = (name, isParent, query) => {
     let domElements, target, parentElement;
     domElements = document.getElementsByClassName(name);
@@ -353,6 +389,8 @@ function injectedFunction() {
 
   const onScrollHandler = () => {
     updateOverlaysLabel();
+		hideOverlappingLabels("content");
+		hideOverlappingLines();
   };
 
   const updateViewportLabel = () => {
@@ -473,17 +511,11 @@ function injectedFunction() {
         updateOverlaysLabel();
       }
     });
+		hideOverlappingLabels("content");
+		hideOverlappingLines();
   };
 
   const elements = [
-    /*
-		{
-      query: "viewportContent",
-      type: "className",
-      color: 1,
-      displayLabel: true,
-    },
-		*/
     {
       query: "h1",
       type: "query",
