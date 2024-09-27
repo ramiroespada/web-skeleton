@@ -10,19 +10,20 @@ function injectedFunction() {
       .join("");
   };
 
-	const isDebug = false;
+  const isDebug = false;
   const color1 = "rgb(222,0,255)";
-  const color2 = "rgba(222,0,255,0.6)";
-  const color3 = "rgba(222,0,255,0.5)";
-  const color4 = "rgba(222,0,255,0.4)";
-  const color5 = "rgba(222,0,255,0.3)";
+	const color2 = "rgba(222,0,255,0.7)";
+  const color3 = "rgba(222,0,255,0.6)";
+  const color4 = "rgba(222,0,255,0.5)";
+  const color5 = "rgba(222,0,255,0.4)";
   const color6 = "rgba(222,0,255,0.2)";
   const color7 = "rgba(222,0,255,0.1)";
+
   const colors = [color1, color2, color3, color4, color5, color6, color7];
 
   const colorTest = "rgba(0, 0, 255, 1)";
 
-	let labels = 0;
+  let labels = 0;
 
   const isElementVisible = (target, query) => {
     if (target.classList.contains("visuallyhidden")) {
@@ -41,6 +42,7 @@ function injectedFunction() {
       query == "h6" ||
       query == "h7"
     ) {
+
       if (String(target.textContent).length <= 1) {
         return false;
       }
@@ -86,7 +88,6 @@ function injectedFunction() {
     let tX = "translateX(0)";
     let tY = "translateY(0)";
 
-
     if (position.slice(0, 1) == "T" && position.slice(2, 3) == "O") {
       tY = "translateY(-100%)";
     }
@@ -112,11 +113,11 @@ function injectedFunction() {
       right = "auto";
       tX = "translateX(-50%)";
     }
-
     let transform = tX + " " + tY;
 
     label.classList.add("web-skeleton-label-" + query);
-    text = document.createTextNode(query);
+
+    let text = document.createTextNode(query);
     label.style.position = "absolute";
     label.style.top = top;
     label.style.left = left;
@@ -145,7 +146,9 @@ function injectedFunction() {
     label.style.zIndex = 999;
     label.appendChild(text);
 
-		labels++;
+    if (isDebug) {
+      labels++;
+    }
 
     return label;
   };
@@ -185,6 +188,10 @@ function injectedFunction() {
       updatePosition = false;
       isVisible = isElementVisible(target, query);
 
+			if(String(target.tagName).toLowerCase() == "span"){
+				displayLabel = false;
+			}
+
       if (isVisible) {
         style = window.getComputedStyle(target);
 
@@ -202,11 +209,11 @@ function injectedFunction() {
           !displayOverlay &&
           target.getBoundingClientRect().width > 100
         ) {
-          if (query == "section" || query == "container" || query == "footer") {
+          if (query == "section" || query == "container" || query == "footer" ) {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
-              "TL"
+              "TLO"
             );
           } else if (
             query == "p" &&
@@ -240,9 +247,9 @@ function injectedFunction() {
               "BR"
             );
           }
-					if(label){
-         		overlayTargetElement.appendChild(label);
-					}
+          if (label) {
+            overlayTargetElement.appendChild(label);
+          }
           updatePosition = true;
         }
 
@@ -290,7 +297,7 @@ function injectedFunction() {
           overlay.style.width = "100%";
           overlay.style.height = "100%";
           overlay.style.backgroundColor = overlayColor;
-					overlay.style.transform = "translate(-50%,-50%)";
+          overlay.style.transform = "translate(-50%,-50%)";
           overlay.style.pointerEvents = "none";
           overlay.style.zIndex = 999;
 
@@ -300,15 +307,15 @@ function injectedFunction() {
               overlayTarget == "parent" ? true : false,
               "CC"
             );
-						if(label){
-            	overlay.appendChild(label);
-						}
+            if (label) {
+              overlay.appendChild(label);
+            }
           }
           overlayTargetElement.appendChild(overlay);
         }
 
         if (updatePosition) {
-        	setRelativePosition(target);
+          setRelativePosition(target);
         }
 
         if (style.getPropertyValue("outline-width") == "0px") {
@@ -495,7 +502,9 @@ function injectedFunction() {
     }
 
     const allElements = body.querySelectorAll("div, span");
-		labels = 0;
+    if (isDebug) {
+      labels = 0;
+    }
     elements.forEach((element) => {
       let domElements;
       if (element.type == "query") {
@@ -506,6 +515,7 @@ function injectedFunction() {
       }
 
       if (element.type == "contains") {
+
         domElements = [...allElements].filter(
           (elementDiv) => elementDiv.className.indexOf(element.query) >= 0
         );
@@ -526,12 +536,13 @@ function injectedFunction() {
         updateOverlaysLabel();
       }
     });
-		if(isDebug){
-			console.log("RE / labels: ", labels);
-		}
+    if (isDebug) {
+      console.log("RE / labels: ", labels);
+    }
   };
 
   const elements = [
+
     {
       query: "h1",
       type: "query",
@@ -584,6 +595,8 @@ function injectedFunction() {
       color: 3,
       displayLabel: true,
     },
+
+
     {
       query: "p",
       type: "query",
