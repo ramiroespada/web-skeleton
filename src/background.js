@@ -12,7 +12,7 @@ function injectedFunction() {
 
   const isDebug = false;
   const color1 = "rgb(222,0,255)";
-	const color2 = "rgba(222,0,255,0.7)";
+  const color2 = "rgba(222,0,255,0.7)";
   const color3 = "rgba(222,0,255,0.6)";
   const color4 = "rgba(222,0,255,0.5)";
   const color5 = "rgba(222,0,255,0.4)";
@@ -23,6 +23,7 @@ function injectedFunction() {
 
   const colorTest = "rgba(0, 0, 255, 1)";
 
+  let outlines = 0;
   let labels = 0;
 
   const isElementVisible = (target, query) => {
@@ -42,7 +43,6 @@ function injectedFunction() {
       query == "h6" ||
       query == "h7"
     ) {
-
       if (String(target.textContent).length <= 1) {
         return false;
       }
@@ -78,7 +78,7 @@ function injectedFunction() {
     if (isParent) {
       label.classList.add("web-skeleton-label-parent");
     } else {
-      label.classList.add("web-skeleton-label");
+      label.classList.add("web-skeleton-label-self");
     }
 
     let top = "0px";
@@ -188,9 +188,9 @@ function injectedFunction() {
       updatePosition = false;
       isVisible = isElementVisible(target, query);
 
-			if(String(target.tagName).toLowerCase() == "span"){
-				displayLabel = false;
-			}
+      if (String(target.tagName).toLowerCase() == "span") {
+        displayLabel = false;
+      }
 
       if (isVisible) {
         style = window.getComputedStyle(target);
@@ -209,7 +209,7 @@ function injectedFunction() {
           !displayOverlay &&
           target.getBoundingClientRect().width > 100
         ) {
-          if (query == "section" || query == "container" || query == "footer" ) {
+          if (query == "section" || query == "container" || query == "footer") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
@@ -287,17 +287,20 @@ function injectedFunction() {
           updatePosition = true;
         }
 
-        if (displayOverlay) {
+        if (
+          displayOverlay &&
+          overlayTargetElement.getElementsByClassName("web-skeleton-overlay")
+            .length <= 0
+        ) {
           overlay = document.createElement("div");
           overlay.classList.add("web-skeleton-overlay");
           overlay.classList.add("web-skeleton-overlay-" + overlayTarget);
           overlay.style.position = "absolute";
-          overlay.style.top = "50%";
-          overlay.style.left = "50%";
+          overlay.style.top = "0px";
+          overlay.style.left = "0px";
           overlay.style.width = "100%";
           overlay.style.height = "100%";
           overlay.style.backgroundColor = overlayColor;
-          overlay.style.transform = "translate(-50%,-50%)";
           overlay.style.pointerEvents = "none";
           overlay.style.zIndex = 999;
 
@@ -320,7 +323,10 @@ function injectedFunction() {
 
         if (style.getPropertyValue("outline-width") == "0px") {
           target.style.outline = "1px " + color + " solid";
-          target.classList.add("web-skeleton");
+          if (isDebug) {
+            outlines++;
+          }
+          target.classList.add("web-skeleton-outline");
         }
 
         if (query == "svg") {
@@ -344,18 +350,18 @@ function injectedFunction() {
     if (domElements) {
       for (let i = 0; i < domElements.length; i++) {
         target = domElements[i];
-
+        if (target.classList.contains("web-skeleton-outline")) {
+          if (isDebug) {
+            outlines++;
+          }
+          target.style.outline = "none";
+        }
         if (query == "relative") {
           target.style.position = target.getAttribute("web-skeleton-position");
         } else {
           if (isParent) {
             parentElement = target.parentElement;
             parentElement.removeChild(target);
-          } else {
-            if (target.classList.contains("web-skeleton")) {
-              target.classList.remove("web-skeleton");
-              target.style.outline = "none";
-            }
           }
           if (query == "svg") {
             target.style.backgroundColor = target.getAttribute(
@@ -375,16 +381,23 @@ function injectedFunction() {
   const removeDebugDecoration = () => {
     removeElementsByClass("web-skeleton-svg", false, "svg");
     removeElementsByClass("web-skeleton-figure", false, "figure");
-    removeElementsByClass("web-skeleton", false, "");
     removeElementsByClass("web-skeleton-overlay", true, "");
-    removeElementsByClass("web-skeleton-label", true, "");
+    removeElementsByClass("web-skeleton-outline", false, "");
+    removeElementsByClass("web-skeleton-label-parent", true, "");
+    removeElementsByClass("web-skeleton-label-self", true, "");
     removeElementsByClass("web-skeleton-line-top", true, "");
     removeElementsByClass("web-skeleton-line-bottom", true, "");
     removeElementsByClass("web-skeleton-relative", false, "relative");
     //
+    let domElements = document.getElementsByClassName("web-skeleton-outline");
+    for (let i = 0; i < domElements.length; i++) {
+      target = domElements[i];
+      target.classList.remove("web-skeleton-outline");
+    }
+    //
   };
 
-  const updateOverlaysLabel = () => {
+  const updateOverlaysLabel = (updateOverlayPosition) => {
     const domElements = document.getElementsByClassName(
       "web-skeleton-overlay-parent"
     );
@@ -395,14 +408,42 @@ function injectedFunction() {
       if (!child) {
         child = target.parentElement.querySelectorAll("svg")[0];
       }
-      let size = target.getBoundingClientRect();
+
+      let childSize = null;
+      let targetSize = target.getBoundingClientRect();
+      let size = targetSize;
       if (child) {
-        size = child.getBoundingClientRect();
+        childSize = child.getBoundingClientRect();
+        if (updateOverlayPosition) {
+          if (targetSize.width < childSize.width) {
+            if (childSize.left < targetSize.left) {
+              target.style.left =
+                (targetSize.width - childSize.width) / 2 + "px";
+            }
+          } else {
+            target.style.left = childSize.x - targetSize.x + "px";
+          }
+          if (targetSize.height < childSize.height) {
+            if (childSize.top < targetSize.top) {
+              target.style.top =
+                (targetSize.height - childSize.height) / 2 + "px";
+            }
+          } else {
+            target.style.top = childSize.y - targetSize.y + "px";
+          }
+          size = childSize;
+        }
       }
       if (label) {
         if (size.width <= 1 || size.height <= 1) {
           label.style.visibility = "hidden";
         } else {
+          target.style.width = size.width + "px";
+          if (childSize && childSize.height < targetSize.height) {
+            target.style.height = childSize.height + "px";
+          } else {
+            target.style.height = size.height + "px";
+          }
           label.style.visibility = "visible";
           label.textContent =
             Math.round(size.width) + " x " + Math.round(size.height);
@@ -412,7 +453,7 @@ function injectedFunction() {
   };
 
   const onScrollHandler = () => {
-    updateOverlaysLabel();
+    updateOverlaysLabel(false);
   };
 
   const updateViewportLabel = () => {
@@ -447,10 +488,21 @@ function injectedFunction() {
 
   const onResizeHandler = () => {
     updateViewportLabel();
-    updateOverlaysLabel();
+    updateOverlaysLabel(true);
+  };
+
+  const printDebugInfo = (state, startDate) => {
+    const endDate = new Date();
+    const seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+    console.log("RE / INFO " + state);
+    console.log("RE / total labels: " + labels);
+    console.log("RE / total outlines: " + outlines);
+    console.log("RE / seconds: " + seconds);
+    console.log(" ");
   };
 
   const toggleDecorations = (elements) => {
+    const startDate = new Date();
     const body = document.getElementsByTagName("body")[0];
     let viewportLabel;
 
@@ -467,6 +519,10 @@ function injectedFunction() {
       //
       for (let i = 0; i < 22; i++) {
         removeDebugDecoration();
+      }
+
+      if (isDebug) {
+        printDebugInfo("REMOVE", startDate);
       }
       return;
       //
@@ -504,6 +560,7 @@ function injectedFunction() {
     const allElements = body.querySelectorAll("div, span");
     if (isDebug) {
       labels = 0;
+      outlines = 0;
     }
     elements.forEach((element) => {
       let domElements;
@@ -515,7 +572,6 @@ function injectedFunction() {
       }
 
       if (element.type == "contains") {
-
         domElements = [...allElements].filter(
           (elementDiv) => elementDiv.className.indexOf(element.query) >= 0
         );
@@ -533,16 +589,15 @@ function injectedFunction() {
           element.displayOverlay ? element.displayOverlay : false,
           element.overlayTarget ? element.overlayTarget : "self"
         );
-        updateOverlaysLabel();
+        updateOverlaysLabel(true);
       }
     });
     if (isDebug) {
-      console.log("RE / labels: ", labels);
+      printDebugInfo("ADD", startDate);
     }
   };
 
   const elements = [
-
     {
       query: "h1",
       type: "query",
@@ -595,7 +650,6 @@ function injectedFunction() {
       color: 3,
       displayLabel: true,
     },
-
 
     {
       query: "p",
@@ -654,6 +708,11 @@ function injectedFunction() {
       color: 4,
     },
     {
+      query: "caption",
+      type: "contains",
+      color: 4,
+    },
+    {
       query: "player",
       type: "contains",
       color: 4,
@@ -693,7 +752,7 @@ function injectedFunction() {
       query: "content",
       type: "contains",
       color: 3,
-      displayLabel: true,
+      displayLabel: false,
     },
     {
       query: "badge",
@@ -745,6 +804,7 @@ function injectedFunction() {
       type: "contains",
       color: 4,
     },
+
     {
       query: "inlineCompareWrap",
       type: "className",
