@@ -23,8 +23,10 @@ function injectedFunction() {
 
   const colorTest = "rgba(0, 0, 255, 1)";
 
-  let outlines = 0;
   let labels = 0;
+  let outlines = 0;
+  let overlays = 0;
+  let lines = 0;
 
   const isElementVisible = (target, query) => {
     if (target.classList.contains("visuallyhidden")) {
@@ -75,6 +77,8 @@ function injectedFunction() {
     position // TL, TC, TR
   ) => {
     let label = document.createElement("div");
+    label.classList.add("web-skeleton");
+    label.classList.add("web-skeleton-label");
     if (isParent) {
       label.classList.add("web-skeleton-label-parent");
     } else {
@@ -114,8 +118,6 @@ function injectedFunction() {
       tX = "translateX(-50%)";
     }
     let transform = tX + " " + tY;
-
-    label.classList.add("web-skeleton-label-" + query);
 
     let text = document.createTextNode(query);
     label.style.position = "absolute";
@@ -157,6 +159,7 @@ function injectedFunction() {
     const style = window.getComputedStyle(element);
     const position = style.getPropertyValue("position");
     if (position != "sticky" && position != "absolute" && position != "fixed") {
+      element.classList.add("web-skeleton");
       element.classList.add("web-skeleton-relative");
       element.setAttribute("web-skeleton-position", position);
       element.style.position = "relative";
@@ -258,6 +261,7 @@ function injectedFunction() {
           target.getElementsByClassName("web-skeleton-line-top").length <= 0
         ) {
           line = document.createElement("div");
+          line.classList.add("web-skeleton");
           line.classList.add("web-skeleton-line");
           line.classList.add("web-skeleton-line-top");
           line.style.position = "absolute";
@@ -270,8 +274,12 @@ function injectedFunction() {
           line.style.transform = "translateX(-50%)";
           line.style.zIndex = 999;
           target.appendChild(line);
+          if (isDebug) {
+            lines++;
+          }
 
           line = document.createElement("div");
+          line.classList.add("web-skeleton");
           line.classList.add("web-skeleton-line");
           line.classList.add("web-skeleton-line-bottom");
           line.style.position = "absolute";
@@ -284,6 +292,10 @@ function injectedFunction() {
           line.style.transform = "translateX(-50%)";
           line.style.zIndex = 999;
           target.appendChild(line);
+          if (isDebug) {
+            lines++;
+          }
+
           updatePosition = true;
         }
 
@@ -293,6 +305,7 @@ function injectedFunction() {
             .length <= 0
         ) {
           overlay = document.createElement("div");
+          overlay.classList.add("web-skeleton");
           overlay.classList.add("web-skeleton-overlay");
           overlay.classList.add("web-skeleton-overlay-" + overlayTarget);
           overlay.style.position = "absolute";
@@ -314,6 +327,9 @@ function injectedFunction() {
               overlay.appendChild(label);
             }
           }
+          if (isDebug) {
+            overlays++;
+          }
           overlayTargetElement.appendChild(overlay);
         }
 
@@ -326,16 +342,19 @@ function injectedFunction() {
           if (isDebug) {
             outlines++;
           }
+          target.classList.add("web-skeleton");
           target.classList.add("web-skeleton-outline");
         }
 
         if (query == "svg") {
+          target.classList.add("web-skeleton");
           target.classList.add("web-skeleton-svg");
           target.setAttribute("web-skeleton-svg-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
         }
 
         if (query == "figure") {
+          target.classList.add("web-skeleton");
           target.classList.add("web-skeleton-figure");
           target.setAttribute("web-skeleton-figure-bg", style.backgroundColor);
           target.style.backgroundColor = overlayColor;
@@ -344,116 +363,133 @@ function injectedFunction() {
     }
   };
 
-  const removeElementsByClass = (name, isParent, query) => {
-    let domElements, target, parentElement;
-    domElements = document.getElementsByClassName(name);
-    if (domElements) {
-      for (let i = 0; i < domElements.length; i++) {
-        target = domElements[i];
-        if (target.classList.contains("web-skeleton-outline")) {
-          if (isDebug) {
-            outlines++;
-          }
-          target.style.outline = "none";
-        }
-        if (query == "relative") {
-          target.style.position = target.getAttribute("web-skeleton-position");
-        } else {
-          if (isParent) {
-            parentElement = target.parentElement;
-            parentElement.removeChild(target);
-          }
-          if (query == "svg") {
-            target.style.backgroundColor = target.getAttribute(
-              "web-skeleton-svg-bg"
-            );
-          }
-          if (query == "figure") {
-            target.style.backgroundColor = target.getAttribute(
-              "web-skeleton-figure-bg"
-            );
-          }
-        }
-      }
-    }
-  };
-
   const removeDebugDecoration = () => {
-    removeElementsByClass("web-skeleton-svg", false, "svg");
-    removeElementsByClass("web-skeleton-figure", false, "figure");
-    removeElementsByClass("web-skeleton-overlay", true, "");
-    removeElementsByClass("web-skeleton-outline", false, "");
-    removeElementsByClass("web-skeleton-label-parent", true, "");
-    removeElementsByClass("web-skeleton-label-self", true, "");
-    removeElementsByClass("web-skeleton-line-top", true, "");
-    removeElementsByClass("web-skeleton-line-bottom", true, "");
-    removeElementsByClass("web-skeleton-relative", false, "relative");
-    //
-    let domElements = document.getElementsByClassName("web-skeleton-outline");
+    let domElements = Array.from(
+      document.getElementsByClassName("web-skeleton")
+    );
+
     for (let i = 0; i < domElements.length; i++) {
       target = domElements[i];
-      target.classList.remove("web-skeleton-outline");
+      if (target.classList.contains("web-skeleton-outline")) {
+        if (isDebug) {
+          outlines++;
+        }
+        target.style.outline = "none";
+      }
+      if (target.classList.contains("web-skeleton-svg")) {
+        target.style.backgroundColor = target.getAttribute(
+          "web-skeleton-svg-bg"
+        );
+        target.removeAttribute("web-skeleton-svg-bg");
+      }
+      if (target.classList.contains("web-skeleton-figure")) {
+        target.style.backgroundColor = target.getAttribute(
+          "web-skeleton-figure-bg"
+        );
+        target.removeAttribute("web-skeleton-figure-bg");
+      }
+      if (target.classList.contains("web-skeleton-relative")) {
+        target.style.position = target.getAttribute("web-skeleton-position");
+      }
+      target.removeAttribute("web-skeleton-position");
+      if (target.classList.contains("web-skeleton-label")) {
+        try {
+          if (isDebug) {
+            labels++;
+          }
+          target.parentElement.removeChild(target);
+        } catch (e) {}
+      }
+      if (target.classList.contains("web-skeleton-line")) {
+        try {
+          if (isDebug) {
+            lines++;
+          }
+          target.parentElement.removeChild(target);
+        } catch (e) {}
+      }
+      if (target.classList.contains("web-skeleton-overlay")) {
+        try {
+          if (isDebug) {
+            overlays++;
+          }
+          target.parentElement.removeChild(target);
+        } catch (e) {}
+      }
     }
-    //
+    domElements = Array.from(document.getElementsByClassName("web-skeleton"));
+    for (let i = 0; i < domElements.length; i++) {
+      target = domElements[i];
+      target.classList.remove("web-skeleton");
+      target.classList.remove("web-skeleton-outline");
+      target.classList.remove("web-skeleton-svg-bg");
+      target.classList.remove("web-skeleton-svg");
+      target.classList.remove("web-skeleton-figure");
+      target.classList.remove("web-skeleton-label");
+      target.classList.remove("web-skeleton-label-parent");
+      target.classList.remove("web-skeleton-label-self");
+      target.classList.remove("web-skeleton-relative");
+      target.classList.remove("web-skeleton-line");
+      target.classList.remove("web-skeleton-line-top");
+      target.classList.remove("web-skeleton-line-bottom");
+      target.classList.remove("web-skeleton-overlay");
+      target.classList.remove("web-skeleton-overlay-parent");
+      target.classList.remove("web-skeleton-overlay-self");
+    }
+    domElements = Array.from(document.getElementsByClassName("web-skeleton"));
   };
 
-  const updateOverlaysLabel = (updateOverlayPosition) => {
+  const updateOverlaysLabel = () => {
     const domElements = document.getElementsByClassName(
       "web-skeleton-overlay-parent"
     );
     for (let i = 0; i < domElements.length; i++) {
       let target = domElements[i];
+      target.style.top = "0px";
+      target.style.left = "0spx";
+      target.style.width = "100%";
+      target.style.height = "100%";
       let label = target.getElementsByClassName("web-skeleton-label-parent")[0];
       let child = target.parentElement.querySelectorAll("img")[0];
       if (!child) {
         child = target.parentElement.querySelectorAll("svg")[0];
       }
-
       let childSize = null;
-      let targetSize = target.getBoundingClientRect();
-      let size = targetSize;
+      let targetSize = target.parentElement.getBoundingClientRect();
       if (child) {
         childSize = child.getBoundingClientRect();
-        if (updateOverlayPosition) {
-          if (targetSize.width < childSize.width) {
-            if (childSize.left < targetSize.left) {
-              target.style.left =
-                (targetSize.width - childSize.width) / 2 + "px";
-            }
-          } else {
-            target.style.left = childSize.x - targetSize.x + "px";
-          }
-          if (targetSize.height < childSize.height) {
-            if (childSize.top < targetSize.top) {
-              target.style.top =
-                (targetSize.height - childSize.height) / 2 + "px";
-            }
-          } else {
-            target.style.top = childSize.y - targetSize.y + "px";
-          }
-          size = childSize;
-        }
       }
       if (label) {
-        if (size.width <= 1 || size.height <= 1) {
+        if (targetSize.width <= 1 || targetSize.height <= 1) {
           label.style.visibility = "hidden";
         } else {
-          target.style.width = size.width + "px";
-          if (childSize && childSize.height < targetSize.height) {
-            target.style.height = childSize.height + "px";
-          } else {
-            target.style.height = size.height + "px";
-          }
           label.style.visibility = "visible";
-          label.textContent =
-            Math.round(size.width) + " x " + Math.round(size.height);
+          if (childSize) {
+            target.style.top = Math.round(childSize.y - targetSize.y) + "px";
+            target.style.left = Math.round(childSize.x - targetSize.x) + "px";
+            target.style.width = childSize.width + "px";
+            target.style.height = childSize.height + "px";
+            label.textContent =
+              Math.round(childSize.width) +
+              " x " +
+              Math.round(childSize.height);
+          } else {
+            target.style.top = "0px";
+            target.style.left = "0spx";
+            target.style.width = "100%";
+            target.style.height = "100%";
+            label.textContent =
+              Math.round(targetSize.width) +
+              " x " +
+              Math.round(targetSize.height);
+          }
         }
       }
     }
   };
 
   const onScrollHandler = () => {
-    updateOverlaysLabel(false);
+    updateOverlaysLabel();
   };
 
   const updateViewportLabel = () => {
@@ -488,7 +524,7 @@ function injectedFunction() {
 
   const onResizeHandler = () => {
     updateViewportLabel();
-    updateOverlaysLabel(true);
+    updateOverlaysLabel();
   };
 
   const printDebugInfo = (state, startDate) => {
@@ -497,6 +533,8 @@ function injectedFunction() {
     console.log("RE / INFO " + state);
     console.log("RE / total labels: " + labels);
     console.log("RE / total outlines: " + outlines);
+    console.log("RE / total overlays: " + overlays);
+    console.log("RE / total lines: " + lines);
     console.log("RE / seconds: " + seconds);
     console.log(" ");
   };
@@ -517,10 +555,8 @@ function injectedFunction() {
       window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("WebSkeleton");
       //
-      for (let i = 0; i < 22; i++) {
-        removeDebugDecoration();
-      }
-
+      removeDebugDecoration();
+      //
       if (isDebug) {
         printDebugInfo("REMOVE", startDate);
       }
@@ -561,6 +597,8 @@ function injectedFunction() {
     if (isDebug) {
       labels = 0;
       outlines = 0;
+      overlays = 0;
+      lines = 0;
     }
     elements.forEach((element) => {
       let domElements;
@@ -589,7 +627,7 @@ function injectedFunction() {
           element.displayOverlay ? element.displayOverlay : false,
           element.overlayTarget ? element.overlayTarget : "self"
         );
-        updateOverlaysLabel(true);
+        updateOverlaysLabel();
       }
     });
     if (isDebug) {
