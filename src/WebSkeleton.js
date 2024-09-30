@@ -212,11 +212,15 @@ function injectedFunction() {
           target.getBoundingClientRect().width > 100
         ) {
           if (query == "section" || query == "container" || query == "footer") {
-            label = createLabel(
-              type == "className" ? kebabize(query) : query,
-              false,
-              "TLI"
-            );
+            const position = style.getPropertyValue("position");
+            if (position != "static") {
+              label = createLabel(
+                type == "className" ? kebabize(query) : query,
+                false,
+                "TLI"
+              );
+              updatePosition = true;
+            }
           } else if (
             query == "p" &&
             style.getPropertyValue("display") == "inline"
@@ -228,6 +232,7 @@ function injectedFunction() {
               false,
               "TRI"
             );
+            updatePosition = true;
           } else if (
             query == "h1" ||
             query == "h2" ||
@@ -242,17 +247,18 @@ function injectedFunction() {
               false,
               "TR"
             );
+            updatePosition = true;
           } else {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
               "BR"
             );
+            updatePosition = true;
           }
           if (label) {
             overlayTargetElement.appendChild(label);
           }
-          updatePosition = true;
         }
 
         if (
@@ -344,6 +350,17 @@ function injectedFunction() {
           target.classList.add("web-skeleton");
           target.classList.add("web-skeleton-outline");
         }
+
+        /*
+				TODO: find a way to decorate breaks inside texts :nbsp:
+        if (query == "p") {
+          console.log(
+            "RE / [WebSkeleton.js:351]: target.innerHTML: ",
+            target.innerHTML
+          );
+          target.style.backgroundColor = "pink";
+        }
+				*/
 
         if (query == "svg") {
           target.classList.add("web-skeleton");
@@ -682,7 +699,6 @@ function injectedFunction() {
       color: 3,
       displayLabel: true,
     },
-
     {
       query: "p",
       type: "query",
@@ -836,7 +852,6 @@ function injectedFunction() {
       type: "contains",
       color: 4,
     },
-
     {
       query: "inlineCompareWrap",
       type: "className",
@@ -869,6 +884,11 @@ function injectedFunction() {
       color: 4,
     },
     {
+      query: "form",
+      type: "contains",
+      color: 4,
+    },
+    {
       query: "tr",
       type: "query",
       color: 6,
@@ -883,12 +903,11 @@ function injectedFunction() {
       type: "query",
       color: 5,
     },
-
     {
       query: "footer",
       type: "query",
       color: 3,
-      displayLabel: true,
+      displayLabel: false,
     },
     {
       query: "nav",
@@ -904,6 +923,16 @@ function injectedFunction() {
       query: "caption",
       type: "query",
       color: 5,
+    },
+  ];
+
+  const onlyP = [
+    {
+      query: "p",
+      type: "query",
+      color: 3,
+      displayLabel: true,
+      displayLines: true,
     },
   ];
 
