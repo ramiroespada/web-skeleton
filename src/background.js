@@ -56,7 +56,7 @@ function injectedFunction() {
       return false;
     }
 
-    if (query == "container" || query == "content") {
+    if (query == "container" || query == "content" || query == "wrapper") {
       if (size.width <= 22 || size.height <= 60) return false;
     }
 
@@ -186,8 +186,7 @@ function injectedFunction() {
       isVisible,
       updatePosition;
 
-    for (let i = 0; i < domElements.length; i++) {
-      target = domElements[i];
+    domElements.forEach((target) => {
       updatePosition = false;
       isVisible = isElementVisible(target, query);
 
@@ -216,13 +215,13 @@ function injectedFunction() {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
               false,
-              "TLO"
+              "TLI"
             );
           } else if (
             query == "p" &&
             style.getPropertyValue("display") == "inline"
           ) {
-            // Skip this element for now!
+            // Skip p elements set to display inline, since the labels don't look good there.
           } else if (query == "content") {
             label = createLabel(
               type == "className" ? kebabize(query) : query,
@@ -360,7 +359,7 @@ function injectedFunction() {
           target.style.backgroundColor = overlayColor;
         }
       }
-    }
+    });
   };
 
   const removeDebugDecoration = () => {
@@ -368,8 +367,7 @@ function injectedFunction() {
       document.getElementsByClassName("web-skeleton")
     );
 
-    for (let i = 0; i < domElements.length; i++) {
-      target = domElements[i];
+    domElements.forEach((target) => {
       if (target.classList.contains("web-skeleton-outline")) {
         if (isDebug) {
           outlines++;
@@ -416,57 +414,57 @@ function injectedFunction() {
           target.parentElement.removeChild(target);
         } catch (e) {}
       }
-    }
+    });
     domElements = Array.from(document.getElementsByClassName("web-skeleton"));
-    for (let i = 0; i < domElements.length; i++) {
-      target = domElements[i];
-      target.classList.remove("web-skeleton");
-      target.classList.remove("web-skeleton-outline");
-      target.classList.remove("web-skeleton-svg-bg");
-      target.classList.remove("web-skeleton-svg");
-      target.classList.remove("web-skeleton-figure");
-      target.classList.remove("web-skeleton-label");
-      target.classList.remove("web-skeleton-label-parent");
-      target.classList.remove("web-skeleton-label-self");
-      target.classList.remove("web-skeleton-relative");
-      target.classList.remove("web-skeleton-line");
-      target.classList.remove("web-skeleton-line-top");
-      target.classList.remove("web-skeleton-line-bottom");
-      target.classList.remove("web-skeleton-overlay");
-      target.classList.remove("web-skeleton-overlay-parent");
-      target.classList.remove("web-skeleton-overlay-self");
-    }
-    domElements = Array.from(document.getElementsByClassName("web-skeleton"));
+    domElements.forEach((element) => {
+      element.classList.remove("web-skeleton");
+      element.classList.remove("web-skeleton-outline");
+      element.classList.remove("web-skeleton-svg-bg");
+      element.classList.remove("web-skeleton-svg");
+      element.classList.remove("web-skeleton-figure");
+      element.classList.remove("web-skeleton-label");
+      element.classList.remove("web-skeleton-label-parent");
+      element.classList.remove("web-skeleton-label-self");
+      element.classList.remove("web-skeleton-relative");
+      element.classList.remove("web-skeleton-line");
+      element.classList.remove("web-skeleton-line-top");
+      element.classList.remove("web-skeleton-line-bottom");
+      element.classList.remove("web-skeleton-overlay");
+      element.classList.remove("web-skeleton-overlay-parent");
+      element.classList.remove("web-skeleton-overlay-self");
+    });
   };
 
   const updateOverlaysLabel = () => {
-    const domElements = document.getElementsByClassName(
-      "web-skeleton-overlay-parent"
+    const domElements = Array.from(
+      document.getElementsByClassName("web-skeleton-overlay-parent")
     );
-    for (let i = 0; i < domElements.length; i++) {
-      let target = domElements[i];
+    domElements.forEach((target) => {
       target.style.top = "0px";
-      target.style.left = "0spx";
+      target.style.left = "0px";
       target.style.width = "100%";
       target.style.height = "100%";
+      let container = target.parentElement;
       let label = target.getElementsByClassName("web-skeleton-label-parent")[0];
-      let child = target.parentElement.querySelectorAll("img")[0];
+      let child = container.querySelectorAll("img")[0];
       if (!child) {
-        child = target.parentElement.querySelectorAll("svg")[0];
+        child = container.querySelectorAll("svg")[0];
       }
       let childSize = null;
-      let targetSize = target.parentElement.getBoundingClientRect();
+      let containerSize = container.getBoundingClientRect();
       if (child) {
         childSize = child.getBoundingClientRect();
       }
       if (label) {
-        if (targetSize.width <= 1 || targetSize.height <= 1) {
+        if (containerSize.width <= 1 || containerSize.height <= 1) {
           label.style.visibility = "hidden";
         } else {
           label.style.visibility = "visible";
-          if (childSize) {
-            target.style.top = Math.round(childSize.y - targetSize.y) + "px";
-            target.style.left = Math.round(childSize.x - targetSize.x) + "px";
+          let style = window.getComputedStyle(container);
+          if (childSize && style.getPropertyValue("width") == "auto") {
+            target.style.top = Math.round(childSize.y - containerSize.y) + "px";
+            target.style.left =
+              Math.round(childSize.x - containerSize.x) + "px";
             target.style.width = childSize.width + "px";
             target.style.height = childSize.height + "px";
             label.textContent =
@@ -474,18 +472,14 @@ function injectedFunction() {
               " x " +
               Math.round(childSize.height);
           } else {
-            target.style.top = "0px";
-            target.style.left = "0spx";
-            target.style.width = "100%";
-            target.style.height = "100%";
             label.textContent =
-              Math.round(targetSize.width) +
+              Math.round(containerSize.width) +
               " x " +
-              Math.round(targetSize.height);
+              Math.round(containerSize.height);
           }
         }
       }
-    }
+    });
   };
 
   const onScrollHandler = () => {
@@ -554,14 +548,11 @@ function injectedFunction() {
       window.removeEventListener("resize", onResizeHandler);
       window.removeEventListener("scroll", onScrollHandler);
       body.removeAttribute("WebSkeleton");
-      //
       removeDebugDecoration();
-      //
       if (isDebug) {
         printDebugInfo("REMOVE", startDate);
       }
       return;
-      //
     } else {
       viewportLabel = document.createElement("div");
       viewportLabel.classList.add("web-skeleton-viewport-label");
@@ -603,10 +594,12 @@ function injectedFunction() {
     elements.forEach((element) => {
       let domElements;
       if (element.type == "query") {
-        domElements = document.querySelectorAll(element.query);
+        domElements = Array.from(document.querySelectorAll(element.query));
       }
       if (element.type == "className") {
-        domElements = document.getElementsByClassName(kebabize(element.query));
+        domElements = Array.from(
+          document.getElementsByClassName(kebabize(element.query))
+        );
       }
 
       if (element.type == "contains") {
@@ -627,9 +620,10 @@ function injectedFunction() {
           element.displayOverlay ? element.displayOverlay : false,
           element.overlayTarget ? element.overlayTarget : "self"
         );
-        updateOverlaysLabel();
       }
     });
+
+    updateOverlaysLabel();
     if (isDebug) {
       printDebugInfo("ADD", startDate);
     }
@@ -790,7 +784,7 @@ function injectedFunction() {
       query: "content",
       type: "contains",
       color: 3,
-      displayLabel: false,
+      displayLabel: true,
     },
     {
       query: "badge",
