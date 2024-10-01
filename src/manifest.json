@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Web Skeleton",
-  "version": "1.0",
+  "version": "0.92",
   "description": "Web Skeleton is a small tool that decorates DOM elements to give developers visual feedback of any website.",
   "permissions": ["activeTab", "scripting"],
   "icons": {

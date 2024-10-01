@@ -27,6 +27,7 @@ function injectedFunction() {
   let outlines = 0;
   let overlays = 0;
   let lines = 0;
+  let spaces = 0;
 
   const isElementVisible = (target, query) => {
     if (target.classList.contains("visuallyhidden")) {
@@ -71,11 +72,7 @@ function injectedFunction() {
     return true;
   };
 
-  const createLabel = (
-    query,
-    isParent,
-    position // TL, TC, TR
-  ) => {
+  const createLabel = (query, isParent, position) => {
     let label = document.createElement("div");
     label.classList.add("web-skeleton");
     label.classList.add("web-skeleton-label");
@@ -145,7 +142,7 @@ function injectedFunction() {
     label.style.filter = "none";
     label.style.webkitTextFillColor = "white";
     label.style.outline = "none";
-    label.style.zIndex = 999;
+    label.style.zIndex = 99;
     label.appendChild(text);
 
     if (isDebug) {
@@ -163,6 +160,9 @@ function injectedFunction() {
       element.classList.add("web-skeleton-relative");
       element.setAttribute("web-skeleton-position", position);
       element.style.position = "relative";
+      return true;
+    } else {
+      return false;
     }
   };
 
@@ -177,8 +177,7 @@ function injectedFunction() {
     displayOverlay,
     overlayTarget
   ) => {
-    let target,
-      overlayTargetElement,
+    let overlayTargetElement,
       style,
       label,
       line,
@@ -196,7 +195,6 @@ function injectedFunction() {
 
       if (isVisible) {
         style = window.getComputedStyle(target);
-
         if (displayOverlay || displayLabel) {
           if (overlayTarget == "parent") {
             overlayTargetElement = target.parentElement;
@@ -277,7 +275,7 @@ function injectedFunction() {
           line.style.background = color6;
           line.style.pointerEvents = "none";
           line.style.transform = "translateX(-50%)";
-          line.style.zIndex = 999;
+          line.style.zIndex = 99;
           target.appendChild(line);
           if (isDebug) {
             lines++;
@@ -295,7 +293,7 @@ function injectedFunction() {
           line.style.background = color6;
           line.style.pointerEvents = "none";
           line.style.transform = "translateX(-50%)";
-          line.style.zIndex = 999;
+          line.style.zIndex = 99;
           target.appendChild(line);
           if (isDebug) {
             lines++;
@@ -320,7 +318,7 @@ function injectedFunction() {
           overlay.style.height = "100%";
           overlay.style.backgroundColor = overlayColor;
           overlay.style.pointerEvents = "none";
-          overlay.style.zIndex = 999;
+          overlay.style.zIndex = "999";
 
           if (displayLabel) {
             label = createLabel(
@@ -350,17 +348,6 @@ function injectedFunction() {
           target.classList.add("web-skeleton");
           target.classList.add("web-skeleton-outline");
         }
-
-        /*
-				TODO: find a way to decorate breaks inside texts :nbsp:
-        if (query == "p") {
-          console.log(
-            "RE / [WebSkeleton.js:351]: target.innerHTML: ",
-            target.innerHTML
-          );
-          target.style.backgroundColor = "pink";
-        }
-				*/
 
         if (query == "svg") {
           target.classList.add("web-skeleton");
@@ -431,6 +418,12 @@ function injectedFunction() {
           target.parentElement.removeChild(target);
         } catch (e) {}
       }
+      if (target.classList.contains("web-skeleton-space")) {
+        if (isDebug) {
+          spaces++;
+        }
+        target.parentElement.removeChild(target);
+      }
     });
     domElements = Array.from(document.getElementsByClassName("web-skeleton"));
     domElements.forEach((element) => {
@@ -449,6 +442,7 @@ function injectedFunction() {
       element.classList.remove("web-skeleton-overlay");
       element.classList.remove("web-skeleton-overlay-parent");
       element.classList.remove("web-skeleton-overlay-self");
+      element.classList.remove("web-skeleton-space");
     });
   };
 
@@ -542,10 +536,11 @@ function injectedFunction() {
     const endDate = new Date();
     const seconds = (endDate.getTime() - startDate.getTime()) / 1000;
     console.log("RE / INFO " + state);
-    console.log("RE / total labels: " + labels);
-    console.log("RE / total outlines: " + outlines);
-    console.log("RE / total overlays: " + overlays);
-    console.log("RE / total lines: " + lines);
+    console.log("RE / labels: " + labels);
+    console.log("RE / outlines: " + outlines);
+    console.log("RE / overlays: " + overlays);
+    console.log("RE / lines: " + lines);
+    console.log("RE / spaces: " + spaces);
     console.log("RE / seconds: " + seconds);
     console.log(" ");
   };
@@ -553,6 +548,15 @@ function injectedFunction() {
   const toggleDecorations = (elements) => {
     const startDate = new Date();
     const body = document.getElementsByTagName("body")[0];
+
+    if (isDebug) {
+      labels = 0;
+      outlines = 0;
+      overlays = 0;
+      lines = 0;
+      spaces = 0;
+    }
+
     let viewportLabel;
 
     if (body.getAttribute("WebSkeleton")) {
@@ -587,7 +591,7 @@ function injectedFunction() {
       viewportLabel.style.background = color1;
       viewportLabel.style.padding = "6px";
       viewportLabel.style.textAlign = "right";
-      viewportLabel.style.zIndex = "999999";
+      viewportLabel.style.zIndex = "99999";
       body.appendChild(viewportLabel);
 
       window.addEventListener("resize", onResizeHandler);
@@ -599,17 +603,29 @@ function injectedFunction() {
 
       // Sorting element by color so stronger colors have priority over blended ones.
       elements.sort((a, b) => parseFloat(a.color) - parseFloat(b.color));
+
+      const textElements = body.querySelectorAll(
+        "p, span, a, li, h1, h2, h3, h4, h5, h6, h7"
+      );
+      textElements.forEach((element) => {
+        if (element.childNodes[0]) {
+          if (element.childNodes[0].nodeType == "3") {
+            let html = element.innerHTML;
+            if (html.indexOf("&nbsp;") >= 0) {
+              html = html.replaceAll(
+                "&nbsp;",
+                "<span class='web-skeleton web-skeleton-space'></span>&nbsp;"
+              );
+              element.innerHTML = html;
+            }
+          }
+        }
+      });
     }
 
     const allElements = body.querySelectorAll("div, span");
-    if (isDebug) {
-      labels = 0;
-      outlines = 0;
-      overlays = 0;
-      lines = 0;
-    }
+    let domElements;
     elements.forEach((element) => {
-      let domElements;
       if (element.type == "query") {
         domElements = Array.from(document.querySelectorAll(element.query));
       }
@@ -638,6 +654,17 @@ function injectedFunction() {
           element.overlayTarget ? element.overlayTarget : "self"
         );
       }
+    });
+
+    let spaceElements = Array.from(
+      document.getElementsByClassName("web-skeleton-space")
+    );
+    if (isDebug) {
+      spaces = spaceElements.length;
+    }
+    spaceElements.forEach((element) => {
+      element.style.lineHeight = "0px";
+      element.style.outline = "1px " + color1 + " solid";
     });
 
     updateOverlaysLabel();
