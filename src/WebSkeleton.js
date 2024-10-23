@@ -12,12 +12,12 @@ function injectedFunction() {
 
   const isDebug = false;
   const color1 = "rgb(222,0,255)";
-  const color2 = "rgba(222,0,255,0.7)";
-  const color3 = "rgba(222,0,255,0.6)";
-  const color4 = "rgba(222,0,255,0.5)";
-  const color5 = "rgba(222,0,255,0.4)";
-  const color6 = "rgba(222,0,255,0.2)";
-  const color7 = "rgba(222,0,255,0.1)";
+  const color2 = "rgba(222,0,255,0.8)";
+  const color3 = "rgba(222,0,255,0.7)";
+  const color4 = "rgba(222,0,255,0.6)";
+  const color5 = "rgba(222,0,255,0.5)";
+  const color6 = "rgba(222,0,255,0.3)";
+  const color7 = "rgba(222,0,255,0.2)";
 
   const colors = [color1, color2, color3, color4, color5, color6, color7];
 
@@ -52,7 +52,7 @@ function injectedFunction() {
       if (size.width <= 10 || size.height <= 10) return false;
     }
 
-    style = window.getComputedStyle(target);
+    let style = window.getComputedStyle(target);
     if (style.getPropertyValue("display") == "none") {
       return false;
     }
@@ -545,9 +545,48 @@ function injectedFunction() {
     console.log(" ");
   };
 
+  const decorateSpaces = (body) => {
+    const textElements = body.querySelectorAll(
+      "p, span, a, li, h1, h2, h3, h4, h5, h6, h7"
+    );
+    const elements = [];
+    textElements.forEach((element) => {
+      if (element.childNodes[0]) {
+        const display = window
+          .getComputedStyle(element)
+          .getPropertyValue("display");
+        if (display != "flex" && display != "none") {
+          if (element.childNodes[0].nodeType == "3") {
+            let html = element.innerHTML;
+            if (html.indexOf("&nbsp;") >= 0) {
+              html = html.replaceAll(
+                "&nbsp;",
+                "<span class='web-skeleton web-skeleton-space'></span>&nbsp;"
+              );
+              element.innerHTML = html;
+              elements.push(element);
+            }
+          }
+        }
+      }
+    });
+
+    cleanSpaces(body, elements);
+  };
+
+  const cleanSpaces = (body, elements) => {
+    elements.forEach((element) => {
+      element.innerHTML = String(element.innerHTML).replaceAll("<p></p>", "");
+    });
+  };
+
   const toggleDecorations = (elements) => {
     const startDate = new Date();
     const body = document.getElementsByTagName("body")[0];
+
+    if (body.getAttribute("WebSkeletonRE")) {
+      return;
+    }
 
     if (isDebug) {
       labels = 0;
@@ -603,24 +642,6 @@ function injectedFunction() {
 
       // Sorting element by color so stronger colors have priority over blended ones.
       elements.sort((a, b) => parseFloat(a.color) - parseFloat(b.color));
-
-      const textElements = body.querySelectorAll(
-        "p, span, a, li, h1, h2, h3, h4, h5, h6, h7"
-      );
-      textElements.forEach((element) => {
-        if (element.childNodes[0]) {
-          if (element.childNodes[0].nodeType == "3") {
-            let html = element.innerHTML;
-            if (html.indexOf("&nbsp;") >= 0) {
-              html = html.replaceAll(
-                "&nbsp;",
-                "<span class='web-skeleton web-skeleton-space'></span>&nbsp;"
-              );
-              element.innerHTML = html;
-            }
-          }
-        }
-      });
     }
 
     const allElements = body.querySelectorAll("div, span");
@@ -656,6 +677,8 @@ function injectedFunction() {
       }
     });
 
+    decorateSpaces(body);
+
     let spaceElements = Array.from(
       document.getElementsByClassName("web-skeleton-space")
     );
@@ -665,6 +688,7 @@ function injectedFunction() {
     spaceElements.forEach((element) => {
       element.style.lineHeight = "0px";
       element.style.outline = "1px " + color1 + " solid";
+      element.style.pointerEvents = "none";
     });
 
     updateOverlaysLabel();
@@ -953,6 +977,7 @@ function injectedFunction() {
     },
   ];
 
+  /*
   const onlyP = [
     {
       query: "p",
@@ -962,6 +987,7 @@ function injectedFunction() {
       displayLines: true,
     },
   ];
+	*/
 
   toggleDecorations(elements);
 }
