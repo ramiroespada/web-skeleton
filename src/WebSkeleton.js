@@ -175,7 +175,8 @@ function injectedFunction() {
     displayLabel,
     displayLines,
     displayOverlay,
-    overlayTarget
+    overlayTarget,
+    outlineStyleNumber
   ) => {
     let overlayTargetElement,
       style,
@@ -341,7 +342,8 @@ function injectedFunction() {
         }
 
         if (style.getPropertyValue("outline-width") == "0px") {
-          target.style.outline = "1px " + color + " solid";
+          // This was temporally moved to styling
+          target.classList.add("web-skeleton-outline-" + outlineStyleNumber);
           if (isDebug) {
             outlines++;
           }
@@ -376,7 +378,7 @@ function injectedFunction() {
         if (isDebug) {
           outlines++;
         }
-        target.style.outline = "none";
+        //target.style.outline = "none";
       }
       if (target.classList.contains("web-skeleton-svg")) {
         target.style.backgroundColor = target.getAttribute(
@@ -443,6 +445,13 @@ function injectedFunction() {
       element.classList.remove("web-skeleton-overlay-parent");
       element.classList.remove("web-skeleton-overlay-self");
       element.classList.remove("web-skeleton-space");
+      element.classList.remove("web-skeleton-outline-1");
+      element.classList.remove("web-skeleton-outline-2");
+      element.classList.remove("web-skeleton-outline-3");
+      element.classList.remove("web-skeleton-outline-4");
+      element.classList.remove("web-skeleton-outline-5");
+      element.classList.remove("web-skeleton-outline-6");
+      element.classList.remove("web-skeleton-outline-7");
     });
   };
 
@@ -599,6 +608,7 @@ function injectedFunction() {
     let viewportLabel;
 
     if (body.getAttribute("WebSkeleton")) {
+      body.contentEditable = false;
       if (body.getElementsByClassName("web-skeleton-viewport-label")) {
         viewportLabel = body.getElementsByClassName(
           "web-skeleton-viewport-label"
@@ -614,6 +624,50 @@ function injectedFunction() {
       }
       return;
     } else {
+      body.contentEditable = true;
+      var styles =
+        `
+			.web-skeleton-outline-1 {
+					outline: 1px ` +
+        color1 +
+        ` solid !important;
+			}
+			.web-skeleton-outline-2 {
+					outline: 1px ` +
+        color2 +
+        `  solid !important;
+			}
+			.web-skeleton-outline-3 {
+					outline: 1px ` +
+        color3 +
+        `  solid !important;
+			}
+			.web-skeleton-outline-4 {
+					outline: 1px ` +
+        color4 +
+        `  solid !important;
+			}
+			.web-skeleton-outline-5 {
+					outline: 1px ` +
+        color5 +
+        `  solid !important;
+			}
+			.web-skeleton-outline-6 {
+					outline: 1px ` +
+        color6 +
+        `  solid !important;
+			}
+			.web-skeleton-outline-7 {
+					outline: 1px ` +
+        color7 +
+        `  solid !important;
+			}
+		`;
+
+      var styleSheet = document.createElement("style");
+      styleSheet.innerText = styles;
+      document.head.appendChild(styleSheet);
+
       viewportLabel = document.createElement("div");
       viewportLabel.classList.add("web-skeleton-viewport-label");
       viewportLabel.style.userSelect = "none";
@@ -631,6 +685,7 @@ function injectedFunction() {
       viewportLabel.style.padding = "6px";
       viewportLabel.style.textAlign = "right";
       viewportLabel.style.zIndex = "99999";
+
       body.appendChild(viewportLabel);
 
       window.addEventListener("resize", onResizeHandler);
@@ -672,7 +727,8 @@ function injectedFunction() {
           element.displayLabel ? element.displayLabel : false,
           element.displayLines ? element.displayLines : false,
           element.displayOverlay ? element.displayOverlay : false,
-          element.overlayTarget ? element.overlayTarget : "self"
+          element.overlayTarget ? element.overlayTarget : "self",
+          element.color ? element.color : 1
         );
       }
     });
@@ -751,6 +807,11 @@ function injectedFunction() {
       displayLabel: true,
     },
     {
+      query: "header",
+      type: "query",
+      color: 3,
+    },
+    {
       query: "p",
       type: "query",
       color: 3,
@@ -768,6 +829,16 @@ function injectedFunction() {
       color: 3,
     },
     {
+      query: "label",
+      type: "query",
+      color: 4,
+    },
+    {
+      query: "legend",
+      type: "query",
+      color: 4,
+    },
+    {
       query: "img",
       type: "query",
       color: 3,
@@ -775,6 +846,11 @@ function injectedFunction() {
       displayLabel: true,
       displayOverlay: true,
       overlayTarget: "parent",
+    },
+    {
+      query: "image",
+      type: "className",
+      color: 3,
     },
     {
       query: "video",
@@ -800,6 +876,11 @@ function injectedFunction() {
       type: "query",
       color: 3,
       overlayColor: color6,
+    },
+    {
+      query: "label",
+      type: "contains",
+      color: 4,
     },
     {
       query: "copy",
@@ -855,6 +936,11 @@ function injectedFunction() {
     },
     {
       query: "badge",
+      type: "className",
+      color: 4,
+    },
+    {
+      query: "counter",
       type: "className",
       color: 4,
     },
@@ -958,7 +1044,7 @@ function injectedFunction() {
       query: "footer",
       type: "query",
       color: 3,
-      displayLabel: false,
+      displayLabel: true,
     },
     {
       query: "nav",
@@ -976,18 +1062,6 @@ function injectedFunction() {
       color: 5,
     },
   ];
-
-  /*
-  const onlyP = [
-    {
-      query: "p",
-      type: "query",
-      color: 3,
-      displayLabel: true,
-      displayLines: true,
-    },
-  ];
-	*/
 
   toggleDecorations(elements);
 }
