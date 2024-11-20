@@ -475,6 +475,18 @@ function injectedFunction() {
       if (child) {
         childSize = child.getBoundingClientRect();
       }
+
+      ///
+      if (
+        containerSize.width == window.innerWidth &&
+        containerSize.height == window.innerHeight
+      ) {
+        container.getElementsByClassName(
+          "web-skeleton-overlay"
+        )[0].style.visibility = "hidden";
+      }
+      //
+
       if (label) {
         if (containerSize.width <= 1 || containerSize.height <= 1) {
           label.style.visibility = "hidden";
@@ -866,8 +878,8 @@ function injectedFunction() {
     {
       query: "canvas",
       type: "query",
-      color: 3,
-      overlayColor: color6,
+      color: 7,
+      overlayColor: color7,
       displayOverlay: true,
       overlayTarget: "parent",
     },
@@ -933,6 +945,11 @@ function injectedFunction() {
       type: "contains",
       color: 3,
       displayLabel: true,
+    },
+    {
+      query: "animation",
+      type: "className",
+      color: 4,
     },
     {
       query: "badge",
