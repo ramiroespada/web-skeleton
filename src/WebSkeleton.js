@@ -947,6 +947,11 @@ function injectedFunction() {
       displayLabel: true,
     },
     {
+      query: "tag",
+      type: "className",
+      color: 4,
+    },
+    {
       query: "animation",
       type: "className",
       color: 4,
