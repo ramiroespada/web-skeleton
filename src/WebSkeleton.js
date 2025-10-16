@@ -717,6 +717,25 @@ function injectedFunction() {
       if (element.type == "query") {
         domElements = Array.from(document.querySelectorAll(element.query));
       }
+
+      if (element.type == "condition") {
+        domElements = [];
+        const elements = Array.from(document.querySelectorAll(element.query));
+        elements.forEach((divElement) => {
+          let style = window.getComputedStyle(divElement);
+          if (element.queryStyle) {
+            style = window.getComputedStyle(divElement, "::before");
+          }
+          prop = style.getPropertyValue(element.prop).toString();
+          console.log("RE / [WebSkeleton.js:730]: prop: ", prop);
+          if (prop && prop.length >= 1) {
+            if (prop.indexOf(element.has) >= 0) {
+              domElements.push(divElement);
+            }
+          }
+        });
+      }
+
       if (element.type == "className") {
         domElements = Array.from(
           document.getElementsByClassName(kebabize(element.query))
@@ -883,12 +902,14 @@ function injectedFunction() {
       displayOverlay: true,
       overlayTarget: "parent",
     },
+
     {
       query: "svg",
       type: "query",
       color: 3,
       overlayColor: color6,
     },
+
     {
       query: "label",
       type: "contains",
@@ -1082,6 +1103,42 @@ function injectedFunction() {
       query: "caption",
       type: "query",
       color: 5,
+    },
+
+    {
+      query: "div",
+      queryStyle: "::before",
+      type: "condition",
+      prop: "background-image",
+      has: "url",
+      color: 5,
+    },
+    {
+      query: "div",
+      queryStyle: "::after",
+      type: "condition",
+      prop: "background-image",
+      has: "url",
+      color: 5,
+    },
+
+    {
+      query: "div",
+      type: "condition",
+      prop: "background-image",
+      has: "url",
+      color: 4,
+    },
+
+    {
+      query: "div",
+      type: "condition",
+      prop: "mask",
+      has: "url",
+      color: 5,
+      displayOverlay: true,
+      overlayColor: color7,
+      overlayTarget: "parent",
     },
   ];
 
