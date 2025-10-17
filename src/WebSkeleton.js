@@ -1,4 +1,21 @@
 function injectedFunction() {
+  const fontUrl = chrome.runtime.getURL("fonts/DMSans-Regular.ttf");
+
+  const webSkeletonFont = new FontFace(
+    "DM Sans",
+    `url(${fontUrl}) format('truetype')`
+  );
+
+  webSkeletonFont
+    .load()
+    .then((font) => {
+      document.fonts.add(font);
+      console.log("RE / [WebSkeleton.js:13]: font: ", font);
+    })
+    .catch((error) => {
+      console.error("Error loading custom font:", error);
+    });
+
   const kebabize = (str) => {
     return str
       .split("")
@@ -11,15 +28,27 @@ function injectedFunction() {
   };
 
   const isDebug = false;
+
+  const color0 = "rgb(0,0,0)";
   const color1 = "rgb(222,0,255)";
   const color2 = "rgba(222,0,255,0.8)";
   const color3 = "rgba(222,0,255,0.7)";
   const color4 = "rgba(222,0,255,0.6)";
   const color5 = "rgba(222,0,255,0.5)";
-  const color6 = "rgba(222,0,255,0.3)";
-  const color7 = "rgba(222,0,255,0.2)";
+  const color6 = "rgba(222,0,255,0.4)";
+  const color7 = "rgba(222,0,255,0.3)";
+  const color8 = "rgba(222,0,255,0.2)";
 
-  const colors = [color1, color2, color3, color4, color5, color6, color7];
+  const colors = [
+    color1,
+    color2,
+    color3,
+    color4,
+    color5,
+    color6,
+    color7,
+    color8,
+  ];
 
   const colorTest = "rgba(0, 0, 255, 1)";
 
@@ -124,15 +153,15 @@ function injectedFunction() {
     label.style.bottom = bottom;
     label.style.width = "auto";
     label.style.height = "auto";
-    label.style.fontFamily = "-apple-system, Helvetica, Arial, sans-serif";
+    label.style.fontFamily = '"DM Sans", serif';
     label.style.fontWeight = "bold";
     label.style.letterSpacing = "1px";
-    label.style.fontSize = "9px";
+    label.style.fontSize = "8px";
     label.style.lineHeight = "8px";
     label.style.textTransform = "none";
     label.style.color = "white";
     label.style.background = color1;
-    label.style.padding = "4px";
+    label.style.padding = "5px";
     label.style.margin = "0px";
     label.style.pointerEvents = "none";
     label.style.textAlign = "left";
@@ -142,7 +171,7 @@ function injectedFunction() {
     label.style.filter = "none";
     label.style.webkitTextFillColor = "white";
     label.style.outline = "none";
-    label.style.zIndex = 99;
+    label.style.zIndex = 999;
     label.appendChild(text);
 
     if (isDebug) {
@@ -687,14 +716,13 @@ function injectedFunction() {
       viewportLabel.style.bottom = "30px";
       viewportLabel.style.right = "30px";
       viewportLabel.style.lineHeight = "10px";
-      viewportLabel.style.fontFamily =
-        "-apple-system, Helvetica, Arial, sans-serif";
+      viewportLabel.style.fontFamily = '"DM Sans", serif';
       viewportLabel.style.fontWeight = "bold";
       viewportLabel.style.letterSpacing = "2px";
-      viewportLabel.style.fontSize = "10px";
+      viewportLabel.style.fontSize = "9px";
       viewportLabel.style.color = "white";
       viewportLabel.style.background = color1;
-      viewportLabel.style.padding = "6px";
+      viewportLabel.style.padding = "5px";
       viewportLabel.style.textAlign = "right";
       viewportLabel.style.zIndex = "99999";
 
@@ -722,14 +750,22 @@ function injectedFunction() {
         domElements = [];
         const elements = Array.from(document.querySelectorAll(element.query));
         elements.forEach((divElement) => {
-          let style = window.getComputedStyle(divElement);
-          if (element.queryStyle) {
-            style = window.getComputedStyle(divElement, "::before");
+          if (element.style) {
+            let style = window.getComputedStyle(divElement);
+            if (element.queryStyle) {
+              style = window.getComputedStyle(divElement, "::before");
+            }
+            let prop = style.getPropertyValue(element.style).toString();
+
+            if (prop && prop.length >= 1) {
+              if (prop.indexOf(element.has) >= 0) {
+                domElements.push(divElement);
+              }
+            }
           }
-          prop = style.getPropertyValue(element.prop).toString();
-          console.log("RE / [WebSkeleton.js:730]: prop: ", prop);
-          if (prop && prop.length >= 1) {
-            if (prop.indexOf(element.has) >= 0) {
+          if (element.attribute) {
+            const attribute = divElement.getAttribute(element.attribute);
+            if (attribute == element.has) {
               domElements.push(divElement);
             }
           }
@@ -909,7 +945,6 @@ function injectedFunction() {
       color: 3,
       overlayColor: color6,
     },
-
     {
       query: "label",
       type: "contains",
@@ -938,7 +973,7 @@ function injectedFunction() {
     {
       query: "logo",
       type: "contains",
-      color: 4,
+      color: 3,
     },
     {
       query: "wrapper",
@@ -1109,7 +1144,7 @@ function injectedFunction() {
       query: "div",
       queryStyle: "::before",
       type: "condition",
-      prop: "background-image",
+      style: "background-image",
       has: "url",
       color: 5,
     },
@@ -1117,15 +1152,14 @@ function injectedFunction() {
       query: "div",
       queryStyle: "::after",
       type: "condition",
-      prop: "background-image",
+      style: "background-image",
       has: "url",
       color: 5,
     },
-
     {
       query: "div",
       type: "condition",
-      prop: "background-image",
+      style: "background-image",
       has: "url",
       color: 4,
     },
@@ -1133,12 +1167,44 @@ function injectedFunction() {
     {
       query: "div",
       type: "condition",
-      prop: "mask",
+      style: "mask",
       has: "url",
-      color: 5,
+      color: 7,
       displayOverlay: true,
       overlayColor: color7,
       overlayTarget: "parent",
+    },
+
+    {
+      query: "summary",
+      type: "query",
+      color: 4,
+    },
+    {
+      query: "div",
+      type: "condition",
+      attribute: "role",
+      has: "button",
+      color: 5,
+    },
+    {
+      query: "div",
+      type: "condition",
+      attribute: "role",
+      has: "link",
+      color: 5,
+    },
+    {
+      query: "div",
+      type: "condition",
+      attribute: "separator",
+      has: "link",
+      color: 5,
+    },
+    {
+      query: "button",
+      type: "contains",
+      color: 4,
     },
   ];
 
